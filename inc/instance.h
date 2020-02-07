@@ -6,6 +6,7 @@ struct camera_;
 struct indirect_;
 struct model_;
 struct theme_;
+struct map_;
 
 typedef struct instance_ {
     struct backdrop_* backdrop;
@@ -17,6 +18,8 @@ typedef struct instance_ {
     struct draw_* wireframe;
 
     struct indirect_* indirect;
+
+    struct map_* map;
 
     enum {
         DRAW_SHADED,

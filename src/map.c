@@ -1,5 +1,6 @@
 #include "map.h"
 #include "shader.h"
+#include "log.h"
 #include "object.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -15,7 +16,7 @@ static const GLchar* MAP_VS_SRC = GLSL(330,
 layout(location=0) in vec3 pos;
 
 void main() {
-    gl_Position = pos;
+    gl_Position = vec4(pos.xy, 0.0f, 1.0f);
 }
 );
 
@@ -42,6 +43,7 @@ map_t* map_new() {
     map->shader = shader_new(MAP_VS_SRC, NULL, MAP_FS_SRC);
 
     glGenVertexArrays(1, &map->vao);
+    glBindVertexArray(map->vao);
 
     glGenBuffers(1, &map->vbo);
     glBindBuffer(GL_ARRAY_BUFFER, map->vbo);
@@ -55,6 +57,9 @@ map_t* map_new() {
                  STATES_TRI_COUNT * 3 * sizeof(uint16_t),
                  STATES_INDEXES, GL_STATIC_DRAW);
 
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    log_gl_error();
     return map;
 }
 
@@ -67,5 +72,9 @@ void map_delete(map_t* map) {
 }
 
 void map_draw(map_t* map) {
-
+    glDisable(GL_DEPTH_TEST);
+    glUseProgram(map->shader.prog);
+    glBindVertexArray(map->vao);
+    glDrawElements(GL_TRIANGLES, STATES_TRI_COUNT * 3, GL_UNSIGNED_SHORT, NULL);
+    log_gl_error();
 }

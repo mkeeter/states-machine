@@ -6,6 +6,7 @@
 #include "indirect.h"
 #include "loader.h"
 #include "log.h"
+#include "map.h"
 #include "mat.h"
 #include "model.h"
 #include "object.h"
@@ -44,6 +45,8 @@ instance_t* instance_new(app_t* parent, const char* filepath, int proj) {
 
     instance->indirect = indirect_new(width, height);
 
+    instance->map = map_new();
+
     /*  At the very last moment, check on the loader */
     loader_finish(loader, instance->model, instance->camera);
 
@@ -68,6 +71,7 @@ void instance_delete(instance_t* instance) {
     draw_delete(instance->wireframe);
     OBJECT_DELETE_MEMBER(instance, window);
     OBJECT_DELETE_MEMBER(instance, indirect);
+    OBJECT_DELETE_MEMBER(instance, map);
     free(instance);
 }
 
@@ -167,6 +171,8 @@ bool instance_draw(instance_t* instance, theme_t* theme) {
             draw(instance->wireframe, instance->model, instance->camera, theme);
             break;
     }
+
+    map_draw(instance->map);
 
     glfwSwapBuffers(instance->window);
     return needs_redraw;
