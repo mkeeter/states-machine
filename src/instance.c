@@ -1,33 +1,20 @@
 #include "app.h"
 #include "backdrop.h"
 #include "camera.h"
-#include "draw.h"
 #include "instance.h"
 #include "indirect.h"
-#include "loader.h"
 #include "log.h"
 #include "map.h"
 #include "mat.h"
-#include "model.h"
 #include "object.h"
 #include "platform.h"
-#include "shaded.h"
 #include "theme.h"
 #include "window.h"
-#include "wireframe.h"
 
-instance_t* instance_new(app_t* parent, const char* filepath, int proj) {
-    /*  Kick the loader off in a separate thread */
-    loader_t* loader = loader_new(filepath);
-
+instance_t* instance_new(app_t* parent) {
     const float width = 500;
     const float height = 500;
-    const char* filename = platform_filename(filepath);
-    GLFWwindow* window = window_new(filename, width, height);
-
-    /*  Highest priority once OpenGL is running: allocate the VBO
-     *  and pass it to the loader thread.  */
-    loader_allocate_vbo(loader);
+    GLFWwindow* window = window_new("States Machine", width, height);
 
     glfwShowWindow(window);
     log_trace("Showed window");
@@ -37,63 +24,27 @@ instance_t* instance_new(app_t* parent, const char* filepath, int proj) {
 
     /*  Next, build the OpenGL-dependent objects */
     instance->backdrop = backdrop_new();
-    instance->camera = camera_new(width, height, proj);
-    instance->model = model_new();
-    instance->shaded = shaded_new();
-    instance->wireframe = wireframe_new();
-    instance->draw_mode = DRAW_SHADED;
+    instance->camera = camera_new(width, height);
 
     instance->indirect = indirect_new(width, height);
 
-    instance->map = map_new();
-
-    /*  At the very last moment, check on the loader */
-    loader_finish(loader, instance->model, instance->camera);
+    instance->map = map_new(instance->camera);
 
     /*  This needs to happen after setting up the instance, because
      *  on Windows, the window size callback is invoked when we add
      *  the menu, which requires the camera to be populated. */
     window_bind(window, instance);
 
-    /*  Sets the error string, or NULL if there was no error. */
-    instance->error = loader_error_string(loader);
-
-    /*  Clean up and return */
-    loader_delete(loader);
     return instance;
 }
 
 void instance_delete(instance_t* instance) {
     OBJECT_DELETE_MEMBER(instance, backdrop);
     OBJECT_DELETE_MEMBER(instance, camera);
-    OBJECT_DELETE_MEMBER(instance, model);
-    draw_delete(instance->shaded);
-    draw_delete(instance->wireframe);
     OBJECT_DELETE_MEMBER(instance, window);
     OBJECT_DELETE_MEMBER(instance, indirect);
     OBJECT_DELETE_MEMBER(instance, map);
     free(instance);
-}
-
-static void instance_set_view(instance_t* instance, int draw_mode) {
-    instance->draw_mode = draw_mode;
-    glfwPostEmptyEvent();
-}
-
-void instance_view_shaded(instance_t* instance) {
-    instance_set_view(instance, DRAW_SHADED);
-}
-
-void instance_view_wireframe(instance_t* instance) {
-    instance_set_view(instance, DRAW_WIREFRAME);
-}
-
-void instance_view_orthographic(instance_t* instance) {
-    camera_anim_proj_orthographic(instance->camera);
-}
-
-void instance_view_perspective(instance_t* instance) {
-    camera_anim_proj_perspective(instance->camera);
 }
 
 /******************************************************************************/
@@ -157,22 +108,13 @@ bool instance_draw(instance_t* instance, theme_t* theme) {
     const bool needs_redraw = camera_check_anim(instance->camera);
 
     glfwMakeContextCurrent(instance->window);
-    indirect_draw(instance->indirect, instance->model, instance->camera);
+    log_trace("%p", (void*)glfwGetCurrentContext());
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-    backdrop_draw(instance->backdrop, theme);
-
-    switch (instance->draw_mode) {
-        case DRAW_SHADED:
-            draw(instance->shaded, instance->model, instance->camera, theme);
-            break;
-        case DRAW_WIREFRAME:
-            draw(instance->wireframe, instance->model, instance->camera, theme);
-            break;
-    }
-
-    map_draw(instance->map);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    map_draw(instance->map, instance->camera);
+    log_trace("drawing");
 
     glfwSwapBuffers(instance->window);
     return needs_redraw;

@@ -12,14 +12,11 @@ int main(int argc, char** argv) {
         .instance_count=0,
         .instances_size=0,
         .theme=NULL,
-        .draw_mode=DRAW_SHADED,
     };
     app.theme = theme_new_solarized();
 
-    if (argc != 2) {
-        log_info("No input file");
-    } else if (argc > 2) {
-        log_error_and_abort("Too many arguments (expected 0 or 1)");
+    if (argc > 1) {
+        log_error_and_abort("Too many arguments (expected 0)");
     }
 
     /* Platform-specific initialization (which includes loading files

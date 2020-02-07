@@ -1,7 +1,6 @@
 #include "platform.h"
 
 #include "log.h"
-#include "draw.h"
 #include "object.h"
 #include "theme.h"
 #include "shader.h"

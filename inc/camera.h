@@ -9,13 +9,8 @@ typedef struct camera_uniforms_ {
     GLint model;
 } camera_uniforms_t;
 
-typedef enum {
-    CAMERA_PROJ_ORTHOGRAPHIC,
-    CAMERA_PROJ_PERSPECTIVE
-} camera_proj_t;
-
 /*  Constructs a new heap-allocated camera */
-camera_t* camera_new(float width, float height, camera_proj_t proj);
+camera_t* camera_new(float width, float height);
 void camera_delete(camera_t* camera);
 
 /*  Sets the camera width and height and updates proj matrix */

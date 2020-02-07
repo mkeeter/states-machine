@@ -1,1 +1,1 @@
-#define LOG_ALIGN (1 + 18)
+#define LOG_ALIGN (2 + 17)

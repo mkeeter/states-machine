@@ -5,8 +5,8 @@
 #include "log.h"
 #include "platform.h"
 
-instance_t* app_open(app_t* app, const char* filename) {
-    instance_t* instance = instance_new(app, filename, app->draw_proj);
+instance_t* app_start(app_t* app) {
+    instance_t* instance = instance_new(app);
 
     /*  If loading failed, then do a special one-time drawing of
      *  the backdrop, show an error dialog, and mark the window
@@ -28,38 +28,9 @@ instance_t* app_open(app_t* app, const char* filename) {
         app->instances = (instance_t**)realloc(
                 app->instances, sizeof(instance_t*) * app->instances_size);
     }
-    instance->draw_mode = app->draw_mode;
     app->instances[app->instance_count++] = instance;
     instance_cb_focus(instance, true);
     return instance;
-}
-
-void app_view_shaded(app_t* app) {
-    app->draw_mode = DRAW_SHADED;
-    for (unsigned i=0; i < app->instance_count; ++i) {
-        instance_view_shaded(app->instances[i]);
-    }
-}
-
-void app_view_wireframe(app_t* app) {
-    app->draw_mode = DRAW_WIREFRAME;
-    for (unsigned i=0; i < app->instance_count; ++i) {
-        instance_view_wireframe(app->instances[i]);
-    }
-}
-
-void app_view_orthographic(app_t* app) {
-    app->draw_proj = CAMERA_PROJ_ORTHOGRAPHIC;
-    for (unsigned i=0; i < app->instance_count; ++i) {
-        instance_view_orthographic(app->instances[i]);
-    }
-}
-
-void app_view_perspective(app_t* app) {
-    app->draw_proj = CAMERA_PROJ_PERSPECTIVE;
-    for (unsigned i=0; i < app->instance_count; ++i) {
-        instance_view_perspective(app->instances[i]);
-    }
 }
 
 void app_set_front(app_t* app, instance_t* instance) {

@@ -4,8 +4,6 @@ struct app_;
 struct backdrop_;
 struct camera_;
 struct indirect_;
-struct model_;
-struct theme_;
 struct map_;
 
 typedef struct instance_ {
@@ -34,7 +32,7 @@ typedef struct instance_ {
     GLFWwindow* window;
 } instance_t;
 
-instance_t* instance_new(struct app_* parent, const char* filepath, int proj);
+instance_t* instance_new(struct app_* parent);
 void instance_delete(instance_t* instance);
 
 /*  Draws an instance

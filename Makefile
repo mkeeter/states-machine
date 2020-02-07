@@ -3,23 +3,15 @@ SRC :=                  \
 	src/app             \
 	src/backdrop        \
 	src/camera          \
-	src/draw            \
-	src/icosphere       \
 	src/instance        \
 	src/indirect        \
-	src/loader          \
 	src/log             \
 	src/map             \
 	src/mat             \
-	src/model           \
 	src/shader          \
-	src/shaded          \
 	src/theme           \
 	src/version         \
-	src/vset            \
 	src/window          \
-	src/wireframe       \
-	src/worker          \
 	vendor/glew/glew    \
 	data/data           \
 	# end of source files
@@ -53,7 +45,7 @@ $(shell echo "$(VERSION)" > $(VERSION_FILE))
 endif
 
 LONGEST=$(shell wc -l src/*.c|grep -v total|sed "s/ //g"|awk '{print length}'|sort|tail -1)
-LOG_ALIGN=\#define LOG_ALIGN (1 + $(LONGEST))
+LOG_ALIGN=\#define LOG_ALIGN (2 + $(LONGEST))
 PREV_LOG_ALIGN := $(shell cat $(LOG_ALIGN_FILE) 2> /dev/null || echo "")
 
 ifneq ($(LOG_ALIGN), $(PREV_LOG_ALIGN))

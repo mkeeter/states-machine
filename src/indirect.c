@@ -1,7 +1,6 @@
 #include "camera.h"
 #include "indirect.h"
 #include "log.h"
-#include "model.h"
 #include "object.h"
 #include "shader.h"
 
@@ -127,17 +126,19 @@ indirect_t* indirect_new(uint32_t width, uint32_t height) {
     return indirect;
 }
 
-void indirect_draw(indirect_t* indirect, model_t* model, camera_t* camera) {
+void indirect_draw(indirect_t* indirect, camera_t* camera) {
     glEnable(GL_DEPTH_TEST);
     glUseProgram(indirect->shader.prog);
-    glBindVertexArray(model->vao);
 
     camera_bind(camera, indirect->u_camera);
 
     glBindFramebuffer(GL_FRAMEBUFFER, indirect->fbo);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    /*
+    glBindVertexArray(model->vao);
     glDrawElements(GL_TRIANGLES, model->tri_count * 3, GL_UNSIGNED_INT, NULL);
+    */
 }
 
 void indirect_blit(indirect_t* indirect)

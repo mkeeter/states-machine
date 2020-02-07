@@ -1,5 +1,4 @@
 #include "camera.h"
-#include "draw.h"
 #include "log.h"
 #include "object.h"
 #include "platform.h"
@@ -98,14 +97,13 @@ static void camera_update_view(camera_t* camera) {
 
     {   /*  Apply the scaling */
         mat4_t s = mat4_scaling(1.0f / camera->scale);
-        s.m[1][1] *= -1.0f;
         camera->view = mat4_mul(camera->view, s);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-camera_t* camera_new(float width, float height, camera_proj_t proj) {
+camera_t* camera_new(float width, float height) {
     OBJECT_ALLOC(camera);
     camera->width = width;
     camera->height = height;
@@ -113,11 +111,8 @@ camera_t* camera_new(float width, float height, camera_proj_t proj) {
     /*  Avoids a division by 0 during initial construction */
     camera->scale = 1.0f;
 
-    switch (proj) {
-        case CAMERA_PROJ_ORTHOGRAPHIC:  camera->lens = 0.0f; break;
-        case CAMERA_PROJ_PERSPECTIVE:   camera->lens = 0.5f; break;
-        default: log_error_and_abort("Invalid projection %i", proj);
-    };
+    /*  Use an orthographic projection */
+    camera->lens = 0.0f;
 
     /*  Initialize matrices to a sane state */
     camera_update_proj(camera);
