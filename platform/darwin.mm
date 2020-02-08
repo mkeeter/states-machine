@@ -76,7 +76,6 @@ extern "C" void platform_init(int argc, char** argv)
     close.target = GLUE;
     [fileMenu addItem:close];
 
-
     NSApplication * nsApp = [NSApplication sharedApplication];
     [nsApp.mainMenu insertItem:fileMenuItem atIndex:1];
 

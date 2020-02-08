@@ -78,14 +78,19 @@ void instance_cb_framebuffer_size(instance_t* instance, int width, int height)
     camera_set_fb_size(instance->camera, width, height);
 }
 
-void instance_cb_mouse_pos(instance_t* instance, float xpos, float ypos) {
-    int fb_x, fb_y;
-    camera_get_fb_pixel(instance->camera, xpos, ypos, &fb_x, &fb_y);
-    int state = compositor_state_at(instance->compositor, fb_x, fb_y);
-    if (state >= 0) {
-        extern const char* STATES_NAMES[];
-        log_trace("%s", STATES_NAMES[state]);
+void instance_update_active_state(instance_t* instance) {
+    int s = compositor_state_at(
+            instance->compositor, instance->mouse_x, instance->mouse_y);
+    if (s != instance->active_state) {
+        instance->active_state = s;
+        glfwPostEmptyEvent();
     }
+}
+
+void instance_cb_mouse_pos(instance_t* instance, float xpos, float ypos) {
+    camera_get_fb_pixel(instance->camera, xpos, ypos,
+                        &instance->mouse_x, &instance->mouse_y);
+    instance_update_active_state(instance);
     camera_set_mouse_pos(instance->camera, xpos, ypos);
 }
 
@@ -125,7 +130,7 @@ bool instance_draw(instance_t* instance) {
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClear(GL_COLOR_BUFFER_BIT);
-    compositor_draw(instance->compositor);
+    compositor_draw(instance->compositor, instance->active_state);
 
     glfwSwapBuffers(instance->window);
     return needs_redraw;

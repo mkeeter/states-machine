@@ -7,11 +7,17 @@ typedef struct instance_ {
     struct compositor_* compositor;
     struct map_* map;
 
+    int mouse_x;
+    int mouse_y;
+    int active_state;
+
     GLFWwindow* window;
 } instance_t;
 
 instance_t* instance_new(void);
 void instance_delete(instance_t* instance);
+
+void instance_update_active_state(instance_t* instance);
 
 /*  Draws an instance
  *

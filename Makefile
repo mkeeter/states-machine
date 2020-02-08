@@ -4,6 +4,7 @@ SRC :=                  \
 	src/compositor      \
 	src/instance        \
 	src/log             \
+	src/main            \
 	src/map             \
 	src/mat             \
 	src/shader          \
@@ -113,7 +114,7 @@ $(BUILD_DIR)/erizo.coff: deploy/win32/erizo.rc
 OBJ += $(BUILD_DIR)/erizo.coff
 endif
 
-$(TARGET_APP): $(BUILD_DIR)/src/main.o $(OBJ)
+$(TARGET_APP): $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
 $(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)

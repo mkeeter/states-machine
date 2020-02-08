@@ -30,6 +30,7 @@ in vec4 grad_color;
 out vec4 out_color;
 
 uniform sampler2D tex;
+uniform int active_state;
 
 vec4 shade_state(int state, int ix, int iy) {
     for (int x = ix - 1; x <= ix; ++x) {
@@ -47,10 +48,10 @@ vec4 shade_state(int state, int ix, int iy) {
 }
 
 vec4 shade_backdrop(vec4 base, int ix, int iy) {
-    const float r_shadow = 2;
+    const float r_shadow = 1;
     const int d = int(r_shadow * 3.0f);
 
-    float r_min = 100.0f;
+    float r_min = d;
     for (int x = ix - d; x <= ix + d; ++x) {
         for (int y = iy - d; y <= iy + d; ++y) {
             float r = sqrt((x - ix)*(x - ix) + (y - iy)*(y - iy));
@@ -67,12 +68,16 @@ vec4 shade_backdrop(vec4 base, int ix, int iy) {
 }
 
 void main() {
-    int ix = int(gl_FragCoord.x);
-    int iy = int(gl_FragCoord.y);
+    int ix = int(gl_FragCoord.x + 0.5f);
+    int iy = int(gl_FragCoord.y + 0.5f);
     float t = texelFetch(tex, ivec2(ix, iy), 0).r;
 
     if (t > 0.0f) {
-        out_color = shade_state(int(t), ix, iy);
+        if (t == active_state) {
+            out_color = 1.5 * shade_state(int(t), ix, iy);
+        } else {
+            out_color = shade_state(int(t), ix, iy);
+        }
     } else {
         out_color = shade_backdrop(vec4(1.0f, 1.0f, 1.0f, 1.0f), ix, iy);
     }
@@ -88,6 +93,7 @@ struct compositor_ {
     shader_t shader;
     GLint u_corners;
     GLint u_tex;
+    GLint u_active_state;
 
     GLuint fbo;
     GLuint tex;
@@ -161,11 +167,13 @@ compositor_t* compositor_new(uint32_t width, uint32_t height) {
 
     {   /* Make a temporary struct to unpack local uniforms */
         GLint prog = compositor->shader.prog;
-        struct { GLint corners; GLint tex; } u;
+        struct { GLint corners, tex, active_state; } u;
         SHADER_GET_UNIFORM(corners);
         SHADER_GET_UNIFORM(tex);
+        SHADER_GET_UNIFORM(active_state);
         compositor->u_corners = u.corners;
         compositor->u_tex = u.tex;
+        compositor->u_active_state = u.active_state;
     }
 
     /* Build a single quad to draw the full-screen texture */
@@ -224,7 +232,7 @@ static void from_hex(const char* hex, float f[3]) {
     }
 }
 
-void compositor_draw(compositor_t* compositor) {
+void compositor_draw(compositor_t* compositor, int active_state) {
     glDisable(GL_DEPTH_TEST);
     glUseProgram(compositor->shader.prog);
 
@@ -240,6 +248,7 @@ void compositor_draw(compositor_t* compositor) {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, compositor->tex);
     glUniform1i(compositor->u_tex, 0);
+    glUniform1i(compositor->u_active_state, active_state);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
@@ -248,5 +257,5 @@ int compositor_state_at(compositor_t* compositor, int x, int y) {
     glBindFramebuffer(GL_FRAMEBUFFER, compositor->fbo);
     float out;
     glReadPixels(x, y, 1, 1, GL_RED, GL_FLOAT, &out);
-    return (int)out - 1;
+    return (int)out;
 }
