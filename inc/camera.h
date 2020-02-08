@@ -16,6 +16,10 @@ void camera_delete(camera_t* camera);
 /*  Sets the camera width and height and updates proj matrix */
 void camera_set_size(camera_t* camera, float width, float height);
 
+/*  Sets the framebuffer size, which isn't used for matrices but can be
+ *  useful when dealing with high-DPI displays. */
+void camera_set_fb_size(camera_t* camera, float width, float height);
+
 /*  Sets the camera's model matrix.
  *  center must be an array of 3 floats */
 void camera_set_model(camera_t* camera, float* center, float scale);
@@ -44,3 +48,6 @@ camera_uniforms_t camera_get_uniforms(GLuint prog);
 
 /*  Binds the camera matrices to the given uniforms */
 void camera_bind(camera_t* camera, camera_uniforms_t u);
+
+/*  Translates from window to framebuffer pixel locations */
+void camera_get_fb_pixel(camera_t* camera, int x, int y, int* fx, int* fy);

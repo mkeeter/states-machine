@@ -189,3 +189,10 @@ void compositor_draw(compositor_t* compositor, theme_t* theme) {
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
+
+float compositor_pixel_at(compositor_t* compositor, int x, int y) {
+    glBindFramebuffer(GL_FRAMEBUFFER, compositor->fbo);
+    float out;
+    glReadPixels(x, y, 1, 1, GL_RED, GL_FLOAT, &out);
+    return out;
+}

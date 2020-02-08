@@ -13,3 +13,5 @@ void compositor_bind(compositor_t* compositor);
 
 /* Render the texture with edge detection and other fancy things */
 void compositor_draw(compositor_t* compositor, struct theme_* theme);
+
+float compositor_pixel_at(compositor_t* compositor, int x, int y);

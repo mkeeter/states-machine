@@ -23,6 +23,10 @@ struct camera_ {
     int width;
     int height;
 
+    /*  Separate parameters for framebuffer, for high-DPI displays */
+    int fb_width;
+    int fb_height;
+
     /*  Projection control (orthographic vs perspective) */
     float lens;
 
@@ -129,6 +133,21 @@ void camera_set_size(camera_t* camera, float width, float height) {
     camera->width = width;
     camera->height = height;
     camera_update_proj(camera);
+}
+
+void camera_set_fb_size(camera_t* camera, float width, float height) {
+    camera->fb_width = width;
+    camera->fb_height = height;
+}
+
+void camera_get_fb_pixel(camera_t* camera, int x, int y,
+                         int* fx, int* fy)
+{
+    const float sx = camera->fb_width / camera->width;
+    const float sy = camera->fb_height / camera->height;
+
+    *fx = x * sx;
+    *fy = camera->fb_height - y * sy;
 }
 
 void camera_set_model(camera_t* camera, float* center, float scale) {

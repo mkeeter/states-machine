@@ -38,6 +38,7 @@ instance_t* instance_new(app_t* parent) {
     glfwGetFramebufferSize(window, &w, &h);
     if (w != width || h != height) {
         compositor_resize(instance->compositor, w, h);
+        camera_set_fb_size(instance->camera, w, h);
     }
 
     return instance;
@@ -75,9 +76,15 @@ void instance_cb_framebuffer_size(instance_t* instance, int width, int height)
 {
     /*  Resize buffers for indirect rendering */
     compositor_resize(instance->compositor, width, height);
+
+    /*  Record size in camera for mouse conversion */
+    camera_set_fb_size(instance->camera, width, height);
 }
 
 void instance_cb_mouse_pos(instance_t* instance, float xpos, float ypos) {
+    int fx, fy;
+    camera_get_fb_pixel(instance->camera, xpos, ypos, &fx, &fy);
+    log_trace("%f", compositor_pixel_at(instance->compositor, fx, fy));
     camera_set_mouse_pos(instance->camera, xpos, ypos);
 }
 
