@@ -82,9 +82,13 @@ void instance_cb_framebuffer_size(instance_t* instance, int width, int height)
 }
 
 void instance_cb_mouse_pos(instance_t* instance, float xpos, float ypos) {
-    int fx, fy;
-    camera_get_fb_pixel(instance->camera, xpos, ypos, &fx, &fy);
-    log_trace("%f", compositor_pixel_at(instance->compositor, fx, fy));
+    int fb_x, fb_y;
+    camera_get_fb_pixel(instance->camera, xpos, ypos, &fb_x, &fb_y);
+    int state = compositor_state_at(instance->compositor, fb_x, fb_y);
+    if (state >= 0) {
+        extern const char* STATES_NAMES[];
+        log_trace("%s", STATES_NAMES[state]);
+    }
     camera_set_mouse_pos(instance->camera, xpos, ypos);
 }
 

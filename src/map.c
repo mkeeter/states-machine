@@ -91,7 +91,7 @@ map_t* map_new(camera_t* camera) {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-    log_trace("finished building map");
+    log_trace("Finished building map");
     log_gl_error();
     return map;
 }
