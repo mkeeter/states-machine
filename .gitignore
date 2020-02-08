@@ -2,3 +2,5 @@ build-*
 data/cb_2018_us_state_20m*
 data/triangles.json
 states-machine
+src/version.c
+inc/log_align.h
