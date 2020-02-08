@@ -47,19 +47,23 @@ vec4 shade_state(int state, int ix, int iy) {
 }
 
 vec4 shade_backdrop(vec4 base, int ix, int iy) {
-    int d = 10;
+    const float r_shadow = 2;
+    const int d = int(r_shadow * 3.0f);
+
     float r_min = 100.0f;
     for (int x = ix - d; x <= ix + d; ++x) {
         for (int y = iy - d; y <= iy + d; ++y) {
+            float r = sqrt((x - ix)*(x - ix) + (y - iy)*(y - iy));
+            if (r > d || r == 0.0f) {
+                continue;
+            }
             float u = texelFetch(tex, ivec2(x, y), 0).r;
             if (u > 0.0f) {
-                float r = sqrt((x - ix)*(x - ix) + (y - iy)*(y - iy));
                 r_min = min(r, r_min);
             }
         }
     }
-    float r_shadow = 1;
-    return base * (1.0 - exp(-r_min / (2*r_shadow*r_shadow)));
+    return base * (1.0 - exp(-(r_min * r_min) / (2*r_shadow*r_shadow)));
 }
 
 void main() {
