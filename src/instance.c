@@ -1,8 +1,7 @@
 #include "app.h"
-#include "backdrop.h"
 #include "camera.h"
+#include "compositor.h"
 #include "instance.h"
-#include "indirect.h"
 #include "log.h"
 #include "map.h"
 #include "mat.h"
@@ -23,10 +22,9 @@ instance_t* instance_new(app_t* parent) {
     instance->parent = parent;
 
     /*  Next, build the OpenGL-dependent objects */
-    instance->backdrop = backdrop_new();
     instance->camera = camera_new(width, height);
 
-    instance->indirect = indirect_new(width, height);
+    instance->compositor = compositor_new(width, height);
 
     instance->map = map_new(instance->camera);
 
@@ -39,10 +37,9 @@ instance_t* instance_new(app_t* parent) {
 }
 
 void instance_delete(instance_t* instance) {
-    OBJECT_DELETE_MEMBER(instance, backdrop);
     OBJECT_DELETE_MEMBER(instance, camera);
     OBJECT_DELETE_MEMBER(instance, window);
-    OBJECT_DELETE_MEMBER(instance, indirect);
+    OBJECT_DELETE_MEMBER(instance, compositor);
     OBJECT_DELETE_MEMBER(instance, map);
     free(instance);
 }
@@ -55,7 +52,7 @@ void instance_cb_window_size(instance_t* instance, int width, int height)
     camera_set_size(instance->camera, width, height);
 
     /*  Resize buffers for indirect rendering */
-    indirect_resize(instance->indirect, width, height);
+    compositor_resize(instance->compositor, width, height);
 
 #ifdef PLATFORM_DARWIN
     /*  Continue to render while the window is being resized
@@ -108,13 +105,17 @@ bool instance_draw(instance_t* instance, theme_t* theme) {
     const bool needs_redraw = camera_check_anim(instance->camera);
 
     glfwMakeContextCurrent(instance->window);
-    log_trace("%p", (void*)glfwGetCurrentContext());
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+    // Draw to the compositor texture
+    compositor_bind(instance->compositor);
     glClear(GL_COLOR_BUFFER_BIT);
     map_draw(instance->map, instance->camera);
-    log_trace("drawing");
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    compositor_draw(instance->compositor, theme);
 
     glfwSwapBuffers(instance->window);
     return needs_redraw;

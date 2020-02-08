@@ -1,21 +1,15 @@
 #include "base.h"
 
 struct app_;
-struct backdrop_;
 struct camera_;
-struct indirect_;
+struct compositor_;
 struct map_;
 
 typedef struct instance_ {
-    struct backdrop_* backdrop;
     struct camera_* camera;
     struct model_* model;
 
-    // Different rendering modes
-    struct draw_* shaded;
-    struct draw_* wireframe;
-
-    struct indirect_* indirect;
+    struct compositor_* compositor;
 
     struct map_* map;
 
@@ -24,9 +18,7 @@ typedef struct instance_ {
         DRAW_WIREFRAME
     } draw_mode;
 
-    const char* error; // Error string from the loader
     struct app_* parent;
-
     bool focused;
 
     GLFWwindow* window;

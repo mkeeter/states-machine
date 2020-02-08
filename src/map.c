@@ -32,7 +32,7 @@ void main() {
 
 static const GLchar* MAP_FS_SRC = GLSL(330,
 in float state_color;
-out vec4 out_color;
+layout(location=0) out vec4 out_color;
 
 void main() {
     int i = int(state_color) * (1 << 24) / 50;
@@ -64,6 +64,7 @@ map_t* map_new(camera_t* camera) {
     glGenVertexArrays(1, &map->vao);
     glBindVertexArray(map->vao);
 
+    // Find the bounding box of the map
     float xmin = STATES_VERTS[0];
     float xmax = STATES_VERTS[0];
     float ymin = STATES_VERTS[1];
@@ -74,7 +75,6 @@ map_t* map_new(camera_t* camera) {
         ymin = fminf(ymin, STATES_VERTS[3*i + 1]);
         ymax = fmaxf(ymax, STATES_VERTS[3*i + 1]);
     }
-    printf("%f %f %f %f\n", xmin, xmax, ymin, ymax);
     float scale = fmaxf(xmax - xmin, ymax - ymin);
     float center[3] = {(xmin + xmax) / 2.0f, (ymin + ymax) / 2.0f, 0.0f};
     camera_set_model(camera, center, scale / 2);

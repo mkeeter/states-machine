@@ -1,22 +1,9 @@
 #include "app.h"
-#include "backdrop.h"
-#include "camera.h"
 #include "instance.h"
 #include "log.h"
-#include "platform.h"
 
 instance_t* app_start(app_t* app) {
     instance_t* instance = instance_new(app);
-
-    /*  If loading failed, then do a special one-time drawing of
-     *  the backdrop, show an error dialog, and mark the window
-     *  as closing in the next event loop */
-    if (instance->error) {
-        backdrop_draw(instance->backdrop, app->theme);
-        glfwSwapBuffers(instance->window);
-        platform_warning("Loading the file failed", instance->error);
-        glfwSetWindowShouldClose(instance->window, 1);
-    }
 
     /*  Add this instance at the back of the array */
     if (app->instance_count == app->instances_size) {

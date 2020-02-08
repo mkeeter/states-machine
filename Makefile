@@ -1,10 +1,9 @@
 # Source files
 SRC :=                  \
 	src/app             \
-	src/backdrop        \
 	src/camera          \
+	src/compositor      \
 	src/instance        \
-	src/indirect        \
 	src/log             \
 	src/map             \
 	src/mat             \
