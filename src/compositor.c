@@ -35,8 +35,22 @@ uniform sampler2D tex;
 void main() {
     int ix = int(gl_FragCoord.x);
     int iy = int(gl_FragCoord.y);
-    vec4 t = texelFetch(tex, ivec2(ix, iy), 0);
-    out_color = t;
+    float t = texelFetch(tex, ivec2(ix, iy), 0).r;
+
+    float edge = 0.0f;
+    for (int x = ix - 1; x <= ix + 1; ++x) {
+        for (int y = iy - 1; y <= iy + 1; ++y) {
+            float u = texelFetch(tex, ivec2(x, y), 0).r;
+            if (u != t) {
+                edge = 1.0f;
+            }
+        }
+    }
+    if (t > 0.0f) {
+        out_color = vec4(t / 50.0f, edge, edge, 1.0f);
+    } else {
+        out_color = grad_color;
+    }
 }
 );
 
@@ -83,18 +97,18 @@ compositor_t* compositor_new(uint32_t width, uint32_t height) {
 
     compositor_resize(compositor, width, height);
 
-    // Bind the color output buffers, which is a texture
+    /* Bind the color output buffers, which is a texture */
     glBindTexture(GL_TEXTURE_2D, compositor->tex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                            GL_TEXTURE_2D, compositor->tex, 0);
 
-    // Bind the depth buffer, which is write-only (so we use a renderbuffer)
+    /* Bind the depth buffer, which is write-only (so we use a renderbuffer) */
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
                               GL_RENDERBUFFER, compositor->rbo);
 
-    // Configure the framebuffer to draw to two color buffers
+    /* Configure the framebuffer to draw to two color buffers */
     GLuint attachments[1] = {GL_COLOR_ATTACHMENT0};
     glDrawBuffers(1, attachments);
 
@@ -116,11 +130,11 @@ compositor_t* compositor_new(uint32_t width, uint32_t height) {
         }
     }
 
-    // Build the compositor's shader program
+    /* Build the compositor's shader program */
     compositor->shader = shader_new(COMPOSITOR_VS_SRC, NULL, COMPOSITOR_FS_SRC);
     glUseProgram(compositor->shader.prog);
 
-    {   // Make a temporary struct to unpack a single uniform
+    {   /* Make a temporary struct to unpack local uniforms */
         GLint prog = compositor->shader.prog;
         struct { GLint corners; GLint tex; } u;
         SHADER_GET_UNIFORM(corners);
@@ -129,7 +143,7 @@ compositor_t* compositor_new(uint32_t width, uint32_t height) {
         compositor->u_tex = u.tex;
     }
 
-    // Build a single quad to draw the full-screen texture
+    /* Build a single quad to draw the full-screen texture */
     const float corners[] = {-1.0f, -1.0f,
                              -1.0f,  1.0f,
                               1.0f, -1.0f,

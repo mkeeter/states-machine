@@ -9,6 +9,11 @@ static void cb_window_size(GLFWwindow* window, int width, int height) {
     instance_cb_window_size(instance, width, height);
 }
 
+static void cb_framebuffer_size(GLFWwindow* window, int width, int height) {
+    instance_t* instance = (instance_t*)glfwGetWindowUserPointer(window);
+    instance_cb_framebuffer_size(instance, width, height);
+}
+
 static void cb_mouse_pos(GLFWwindow* window, double x, double y) {
     instance_t* instance = (instance_t*)glfwGetWindowUserPointer(window);
     instance_cb_mouse_pos(instance, x, y);
@@ -46,6 +51,7 @@ void window_bind(GLFWwindow* window, instance_t* instance) {
     glfwSetWindowUserPointer(window, instance);
 
     glfwSetWindowSizeCallback(window, cb_window_size);
+    glfwSetFramebufferSizeCallback(window, cb_framebuffer_size);
 
     glfwSetCursorPosCallback(window, cb_mouse_pos);
     glfwSetScrollCallback(window, cb_mouse_scroll);

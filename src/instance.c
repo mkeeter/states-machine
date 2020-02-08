@@ -23,15 +23,22 @@ instance_t* instance_new(app_t* parent) {
 
     /*  Next, build the OpenGL-dependent objects */
     instance->camera = camera_new(width, height);
-
     instance->compositor = compositor_new(width, height);
-
     instance->map = map_new(instance->camera);
 
     /*  This needs to happen after setting up the instance, because
      *  on Windows, the window size callback is invoked when we add
      *  the menu, which requires the camera to be populated. */
     window_bind(window, instance);
+
+    /*  After the window shown, check to see if the framebuffer is a different
+     *  size from the given width / height (which is the case in high-DPI
+     *  environments).  If that's the case, regenerate textures. */
+    int w, h;
+    glfwGetFramebufferSize(window, &w, &h);
+    if (w != width || h != height) {
+        compositor_resize(instance->compositor, w, h);
+    }
 
     return instance;
 }
@@ -51,9 +58,6 @@ void instance_cb_window_size(instance_t* instance, int width, int height)
     /*  Update camera size (and recalculate projection matrix) */
     camera_set_size(instance->camera, width, height);
 
-    /*  Resize buffers for indirect rendering */
-    compositor_resize(instance->compositor, width, height);
-
 #ifdef PLATFORM_DARWIN
     /*  Continue to render while the window is being resized
      *  (otherwise it ends up greyed out on Mac)  */
@@ -65,6 +69,12 @@ void instance_cb_window_size(instance_t* instance, int width, int height)
     glfwMakeContextCurrent(instance->window);
     glViewport(0, 0, width, height);
 #endif
+}
+
+void instance_cb_framebuffer_size(instance_t* instance, int width, int height)
+{
+    /*  Resize buffers for indirect rendering */
+    compositor_resize(instance->compositor, width, height);
 }
 
 void instance_cb_mouse_pos(instance_t* instance, float xpos, float ypos) {

@@ -32,13 +32,10 @@ void main() {
 
 static const GLchar* MAP_FS_SRC = GLSL(330,
 in float state_color;
-layout(location=0) out vec4 out_color;
+layout(location=0) out float out_color;
 
 void main() {
-    int i = int(state_color) * (1 << 24) / 50;
-    out_color = vec4((i % 255) / 255.0f,
-                 ((i / 255) % 255) / 255.0f,
-                 ((i / 255 / 255) % 255) / 255.0f, 1.0f);
+    out_color = state_color;
 }
 );
 
