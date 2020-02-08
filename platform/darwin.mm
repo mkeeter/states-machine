@@ -1,5 +1,4 @@
 extern "C" {
-#include "app.h"
 #include "instance.h"
 #include "window.h"
 }
@@ -20,8 +19,6 @@ extern "C" {
 @end
 
 @interface Glue : NSObject {
-@public
-    app_t* app;
 }
 -(void) onClose;
 -(void) onAboutMenu;
@@ -63,12 +60,9 @@ extern "C" void platform_window_bind(GLFWwindow* w) {
                              handle, OBJC_ASSOCIATION_RETAIN);
 }
 
-extern "C" void platform_init(app_t* app, int argc, char** argv)
+extern "C" void platform_init(int argc, char** argv)
 {
     GLUE = [[Glue alloc] init];
-    GLUE->app = app;
-
-    app_start(app);
 
     // Build a file menu
     NSMenu *fileMenu = [[[NSMenu alloc] initWithTitle:@"File"] autorelease];

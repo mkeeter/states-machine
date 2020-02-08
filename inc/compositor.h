@@ -1,6 +1,5 @@
 #include "base.h"
 
-struct theme_;
 typedef struct compositor_ compositor_t;
 
 void compositor_delete(compositor_t* compositor);
@@ -12,7 +11,7 @@ void compositor_resize(compositor_t* compositor,
 void compositor_bind(compositor_t* compositor);
 
 /* Render the texture with edge detection and other fancy things */
-void compositor_draw(compositor_t* compositor, struct theme_* theme);
+void compositor_draw(compositor_t* compositor);
 
 /*  Returns the state at the given window pixel */
 int compositor_state_at(compositor_t* compositor, int x, int y);

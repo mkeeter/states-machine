@@ -1,37 +1,23 @@
 #include "base.h"
 
-struct app_;
-struct camera_;
-struct compositor_;
-struct map_;
+struct theme_;
 
 typedef struct instance_ {
     struct camera_* camera;
-    struct model_* model;
-
     struct compositor_* compositor;
-
     struct map_* map;
-
-    enum {
-        DRAW_SHADED,
-        DRAW_WIREFRAME
-    } draw_mode;
-
-    struct app_* parent;
-    bool focused;
 
     GLFWwindow* window;
 } instance_t;
 
-instance_t* instance_new(struct app_* parent);
+instance_t* instance_new(void);
 void instance_delete(instance_t* instance);
 
 /*  Draws an instance
  *
  *  Returns true if the main loop should schedule a redraw immediately
  *  (e.g. because there's an animation running in this instance). */
-bool instance_draw(instance_t* instance, struct theme_* theme);
+bool instance_draw(instance_t* instance);
 
 void instance_view_shaded(instance_t* instance);
 void instance_view_wireframe(instance_t* instance);

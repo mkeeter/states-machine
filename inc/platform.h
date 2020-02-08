@@ -1,7 +1,5 @@
 #include "base.h"
 
-struct app_;
-
 typedef struct platform_mmap_ platform_mmap_t;
 platform_mmap_t* platform_mmap(const char* filename);
 const char* platform_mmap_data(platform_mmap_t* m);
@@ -51,7 +49,7 @@ int platform_thread_join(platform_thread_t* thread);
 ////////////////////////////////////////////////////////////////////////////////
 
 /*  Initializes the menu and other native features */
-void platform_init(struct app_* app, int argc, char** argv);
+void platform_init(int argc, char** argv);
 void platform_window_bind(GLFWwindow* window);
 
 /*  Shows a warning dialog with the given text */

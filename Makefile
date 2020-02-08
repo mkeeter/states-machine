@@ -1,6 +1,5 @@
 # Source files
 SRC :=                  \
-	src/app             \
 	src/camera          \
 	src/compositor      \
 	src/instance        \
@@ -8,7 +7,6 @@ SRC :=                  \
 	src/map             \
 	src/mat             \
 	src/shader          \
-	src/theme           \
 	src/version         \
 	src/window          \
 	vendor/glew/glew    \

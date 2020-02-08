@@ -1,4 +1,3 @@
-#include "app.h"
 #include "instance.h"
 #include "log.h"
 #include "platform.h"
@@ -31,12 +30,6 @@ static void cb_mouse_click(GLFWwindow* window, int button,
     instance_cb_mouse_click(instance, button, action, mods);
 }
 
-static void cb_focus(GLFWwindow* window, int focus)
-{
-    instance_t* instance = (instance_t*)glfwGetWindowUserPointer(window);
-    instance_cb_focus(instance, focus);
-}
-
 static void cb_close(GLFWwindow* window)
 {
     //  Kick the main loop, so that it exits if all windows are closed
@@ -56,7 +49,6 @@ void window_bind(GLFWwindow* window, instance_t* instance) {
     glfwSetCursorPosCallback(window, cb_mouse_pos);
     glfwSetScrollCallback(window, cb_mouse_scroll);
     glfwSetMouseButtonCallback(window, cb_mouse_click);
-    glfwSetWindowFocusCallback(window, cb_focus);
     glfwSetWindowCloseCallback(window, cb_close);
 
     platform_window_bind(window);

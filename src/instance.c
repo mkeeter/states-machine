@@ -1,4 +1,3 @@
-#include "app.h"
 #include "camera.h"
 #include "compositor.h"
 #include "instance.h"
@@ -7,10 +6,9 @@
 #include "mat.h"
 #include "object.h"
 #include "platform.h"
-#include "theme.h"
 #include "window.h"
 
-instance_t* instance_new(app_t* parent) {
+instance_t* instance_new(void) {
     const float width = 500;
     const float height = 500;
     GLFWwindow* window = window_new("States Machine", width, height);
@@ -19,7 +17,6 @@ instance_t* instance_new(app_t* parent) {
     log_trace("Showed window");
 
     OBJECT_ALLOC(instance);
-    instance->parent = parent;
 
     /*  Next, build the OpenGL-dependent objects */
     instance->camera = camera_new(width, height);
@@ -62,7 +59,7 @@ void instance_cb_window_size(instance_t* instance, int width, int height)
 #ifdef PLATFORM_DARWIN
     /*  Continue to render while the window is being resized
      *  (otherwise it ends up greyed out on Mac)  */
-    instance_draw(instance, instance->parent->theme);
+    instance_draw(instance);
 #endif
 
 #ifdef PLATFORM_WIN32
@@ -114,15 +111,7 @@ void instance_cb_mouse_scroll(instance_t* instance,
     camera_zoom(instance->camera, yoffset);
 }
 
-void instance_cb_focus(instance_t* instance, bool focus)
-{
-    instance->focused = focus;
-    if (focus) {
-        app_set_front(instance->parent, instance);
-    }
-}
-
-bool instance_draw(instance_t* instance, theme_t* theme) {
+bool instance_draw(instance_t* instance) {
     const bool needs_redraw = camera_check_anim(instance->camera);
 
     glfwMakeContextCurrent(instance->window);
@@ -136,7 +125,7 @@ bool instance_draw(instance_t* instance, theme_t* theme) {
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClear(GL_COLOR_BUFFER_BIT);
-    compositor_draw(instance->compositor, theme);
+    compositor_draw(instance->compositor);
 
     glfwSwapBuffers(instance->window);
     return needs_redraw;

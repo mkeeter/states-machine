@@ -2,7 +2,6 @@
 #include "log.h"
 #include "object.h"
 #include "shader.h"
-#include "theme.h"
 
 static const GLchar* COMPOSITOR_VS_SRC = GLSL(330,
 layout(location=0) in vec2 pos;
@@ -177,10 +176,40 @@ void compositor_bind(compositor_t* compositor) {
     glBindFramebuffer(GL_FRAMEBUFFER, compositor->fbo);
 }
 
-void compositor_draw(compositor_t* compositor, theme_t* theme) {
+static void from_hex(const char* hex, float f[3]) {
+    if (strlen(hex) != 6) {
+        log_error_and_abort("Invalid hex string '%s'", hex);
+    }
+    uint8_t c[3] = {0};
+    for (unsigned i=0; i < 6; ++i) {
+        unsigned v = 0;
+        if (hex[i] >= 'a' && hex[i] <= 'f') {
+            v = hex[i] - 'a' + 10;
+        } else if (hex[i] >= 'A' && hex[i] <= 'F') {
+            v = hex[i] - 'A' + 10;
+        } else if (hex[i] >= '0' && hex[i] <= '9') {
+            v = hex[i] - '0';
+        } else {
+            log_error_and_abort("Invalid hex character '%c'", hex[i]);
+        }
+        c[i / 2] = (c[i / 2] << 4) + v;
+    }
+    for (unsigned i=0; i < 3; ++i) {
+        f[i] = c[i] / 255.0f;
+    }
+}
+
+void compositor_draw(compositor_t* compositor) {
     glDisable(GL_DEPTH_TEST);
     glUseProgram(compositor->shader.prog);
-    glUniform3fv(compositor->u_corners, 4, (const float*)&theme->corners);
+
+    float corners[4][3];
+    from_hex("002833", corners[0]);
+    from_hex("002833", corners[1]);
+    from_hex("003440", corners[2]);
+    from_hex("002833", corners[3]);
+
+    glUniform3fv(compositor->u_corners, 4, (const float*)corners);
     glBindVertexArray(compositor->vao);
 
     glActiveTexture(GL_TEXTURE0);
