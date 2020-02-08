@@ -31,25 +31,46 @@ out vec4 out_color;
 
 uniform sampler2D tex;
 
+vec4 shade_state(int state, int ix, int iy) {
+    for (int x = ix - 1; x <= ix; ++x) {
+        for (int y = iy - 1; y <= iy; ++y) {
+            float u = texelFetch(tex, ivec2(x, y), 0).r;
+            if (u != state) {
+                // State boundaries are black
+                return vec4(0.0f, 0.0f, 0.0f, 1.0f);
+            }
+        }
+    }
+
+    float r = (fract(sin(state * 43758.54123)) - 0.5f) / 5.0f + 1.0f;
+    return vec4(0.5f * r, 0.5f * r, 0.5f * r, 1.0f);
+}
+
+vec4 shade_backdrop(vec4 base, int ix, int iy) {
+    int d = 10;
+    float r_min = 100.0f;
+    for (int x = ix - d; x <= ix + d; ++x) {
+        for (int y = iy - d; y <= iy + d; ++y) {
+            float u = texelFetch(tex, ivec2(x, y), 0).r;
+            if (u > 0.0f) {
+                float r = sqrt((x - ix)*(x - ix) + (y - iy)*(y - iy));
+                r_min = min(r, r_min);
+            }
+        }
+    }
+    float r_shadow = 1;
+    return base * (1.0 - exp(-r_min / (2*r_shadow*r_shadow)));
+}
+
 void main() {
     int ix = int(gl_FragCoord.x);
     int iy = int(gl_FragCoord.y);
     float t = texelFetch(tex, ivec2(ix, iy), 0).r;
 
-    bool edge = false;
-    for (int x = ix - 1; x <= ix; ++x) {
-        for (int y = iy - 1; y <= iy; ++y) {
-            float u = texelFetch(tex, ivec2(x, y), 0).r;
-            edge = edge || (u != t);
-        }
-    }
-    if (edge) {
-        out_color = vec4(0.0f, 0.0f, 0.0f, 1.0f);
-    } else if (t > 0.0f) {
-        float r = (fract(sin(t * 43758.54123)) - 0.5f) / 5.0f + 1.0f;
-        out_color = vec4(0.5f * r, 0.5f * r, 0.5f * r, 1.0f);
+    if (t > 0.0f) {
+        out_color = shade_state(int(t), ix, iy);
     } else {
-        out_color = grad_color;
+        out_color = shade_backdrop(vec4(1.0f, 1.0f, 1.0f, 1.0f), ix, iy);
     }
 }
 );
