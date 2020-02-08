@@ -37,17 +37,18 @@ void main() {
     int iy = int(gl_FragCoord.y);
     float t = texelFetch(tex, ivec2(ix, iy), 0).r;
 
-    float edge = 0.0f;
-    for (int x = ix - 1; x <= ix + 1; ++x) {
-        for (int y = iy - 1; y <= iy + 1; ++y) {
+    bool edge = false;
+    for (int x = ix - 1; x <= ix; ++x) {
+        for (int y = iy - 1; y <= iy; ++y) {
             float u = texelFetch(tex, ivec2(x, y), 0).r;
-            if (u != t) {
-                edge = 1.0f;
-            }
+            edge = edge || (u != t);
         }
     }
-    if (t > 0.0f) {
-        out_color = vec4(t / 50.0f, edge, edge, 1.0f);
+    if (edge) {
+        out_color = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    } else if (t > 0.0f) {
+        float r = (fract(sin(t * 43758.54123)) - 0.5f) / 5.0f + 1.0f;
+        out_color = vec4(0.5f * r, 0.5f * r, 0.5f * r, 1.0f);
     } else {
         out_color = grad_color;
     }
