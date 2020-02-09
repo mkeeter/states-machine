@@ -134,6 +134,8 @@ bool instance_draw(instance_t* instance) {
     glClear(GL_COLOR_BUFFER_BIT);
     compositor_draw(instance->compositor, instance->active_state);
 
+    console_draw(instance->console, "hello");
+
     glfwSwapBuffers(instance->window);
     return needs_redraw;
 }
