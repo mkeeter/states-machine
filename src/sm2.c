@@ -1,3 +1,4 @@
+#include "data.h"
 #include "log.h"
 #include "object.h"
 #include "sm2.h"
@@ -39,12 +40,36 @@ sm2_t* sm2_new() {
                 "type INTEGER NOT NULL,"
                 "item TEXT NOT NULL,"
                 "ef REAL NOT NULL,"
-                "next TEXT NOT NULL,"
-                "reps INT NOT NULL"
+                "next TEXT,"
+                "reps INT"
                 ")", NULL, NULL, &err_msg) != SQLITE_OK)
     {
         log_error_and_abort("Could not create table: %s", err_msg);
     }
+
+    sqlite3_stmt* stmt;
+    if (sqlite3_prepare_v2(sm2->db,
+        "INSERT OR IGNORE INTO sm2(type, item, ef)"
+        "VALUES (?, ?, 2.5)",
+        -1, &stmt, NULL) != SQLITE_OK)
+    {
+        log_error_and_abort("Could not prepare statement");
+    }
+    for (unsigned m=0; m < 2; ++m) {
+        for (unsigned state=0; state < STATES_COUNT; ++state) {
+            sqlite3_reset(stmt);
+            sqlite3_bind_int(stmt, 1, m);
+            sqlite3_bind_text(stmt, 2, STATES_NAMES[state], -1, SQLITE_STATIC);
+            int err;
+            do {
+                err = sqlite3_step(stmt);
+                if (err == SQLITE_ERROR) {
+                    log_error_and_abort("Could not insert initial shape");
+                }
+            } while (err != SQLITE_DONE);
+        }
+    }
+    sqlite3_finalize(stmt);
 
     return sm2;
 }

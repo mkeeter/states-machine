@@ -1,6 +1,7 @@
 #include "base.h"
 
 // Generated data in data.c
+extern const unsigned STATES_COUNT;
 extern const unsigned STATES_VERT_COUNT;
 extern const unsigned STATES_TRI_COUNT;
 extern const float STATES_VERTS[];
