@@ -9,10 +9,12 @@ SRC :=                  \
 	src/map             \
 	src/mat             \
 	src/shader          \
+	src/sm2             \
 	src/version         \
 	src/window          \
 	vendor/glew/glew    \
 	vendor/stb/stb_truetype \
+	vendor/sqlite/sqlite3 \
 	data/data           \
 	# end of source files
 

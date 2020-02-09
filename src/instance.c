@@ -1,12 +1,14 @@
 #include "camera.h"
 #include "compositor.h"
 #include "console.h"
+#include "data.h"
 #include "instance.h"
 #include "log.h"
 #include "map.h"
 #include "mat.h"
 #include "object.h"
 #include "platform.h"
+#include "sm2.h"
 #include "window.h"
 
 instance_t* instance_new(void) {
@@ -24,6 +26,8 @@ instance_t* instance_new(void) {
     instance->compositor = compositor_new(width, height);
     instance->map = map_new(instance->camera);
     instance->console = console_new();
+
+    instance->sm2 = sm2_new();
 
     /*  This needs to happen after setting up the instance, because
      *  on Windows, the window size callback is invoked when we add
@@ -134,7 +138,11 @@ bool instance_draw(instance_t* instance) {
     glClear(GL_COLOR_BUFFER_BIT);
     compositor_draw(instance->compositor, instance->active_state);
 
-    console_draw(instance->console, "hello");
+    if (instance->active_state) {
+        char buf[2048];
+        snprintf(buf, sizeof(buf), "Mouse is over \x01%s", STATES_NAMES[instance->active_state - 1]);
+        console_draw(instance->console, buf);
+    }
 
     glfwSwapBuffers(instance->window);
     return needs_redraw;

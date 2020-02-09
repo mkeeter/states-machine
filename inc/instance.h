@@ -7,6 +7,7 @@ typedef struct instance_ {
     struct compositor_* compositor;
     struct console_* console;
     struct map_* map;
+    struct sm2_* sm2;
 
     int mouse_x;
     int mouse_y;
