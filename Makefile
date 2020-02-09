@@ -1,21 +1,21 @@
 # Source files
-SRC :=                  \
-	src/camera          \
-	src/compositor      \
-	src/console         \
-	src/instance        \
-	src/log             \
-	src/main            \
-	src/map             \
-	src/mat             \
-	src/shader          \
-	src/sm2             \
-	src/version         \
-	src/window          \
-	vendor/glew/glew    \
-	vendor/stb/stb_truetype \
-	vendor/sqlite/sqlite3 \
-	data/data           \
+SRC :=                          \
+	src/camera                  \
+	src/compositor              \
+	src/console                 \
+	src/instance                \
+	src/log                     \
+	src/main                    \
+	src/map                     \
+	src/mat                     \
+	src/shader                  \
+	src/sm2                     \
+	src/version                 \
+	src/window                  \
+	data/data                   \
+	vendor/glew/glew            \
+	vendor/stb/stb_truetype     \
+	vendor/sqlite/sqlite3       \
 	# end of source files
 
 ################################################################################
