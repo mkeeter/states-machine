@@ -16,15 +16,6 @@ float sm2_repetition_interval(unsigned n, float ef) {
     }
 }
 
-float sm2_updated_ef(unsigned q, float ef) {
-    if (q < 3) {
-        log_error_and_abort("EF should not be updated if q < 3");
-        return 0.0f;
-    } else {
-        return fmax(1.3f, ef + 0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
-    }
-}
-
 struct sm2_ {
     sqlite3* db;
 
@@ -57,7 +48,7 @@ sm2_t* sm2_new() {
     OBJECT_ALLOC(sm2);
 
     if (sqlite3_open("sm.sqlite", &sm2->db) != SQLITE_OK) {
-        log_error_and_abort("Could not open database");
+        log_sqlite_error_and_abort();
     }
 
     char* err_msg;
@@ -74,8 +65,8 @@ sm2_t* sm2_new() {
 
     sqlite3_stmt* stmt;
     sm2_prepare_statement(sm2, &stmt,
-        "INSERT OR IGNORE INTO sm2(type, item, ef)"
-        "    VALUES (?, ?, 2.5)");
+        "INSERT OR IGNORE INTO sm2(type, item, ef, reps)"
+        "    VALUES (?, ?, 2.5, 0)");
     for (unsigned m=0; m < 2; ++m) {
         for (unsigned state=0; state < STATES_COUNT; ++state) {
             sqlite3_reset(stmt);
@@ -83,15 +74,14 @@ sm2_t* sm2_new() {
             sqlite3_bind_int(stmt, 1, m);
             sqlite3_bind_text(stmt, 2, STATES_NAMES[state], -1, SQLITE_STATIC);
             if (sqlite3_step(stmt) != SQLITE_DONE) {
-                log_error_and_abort("Unexpected SQLite error: %s",
-                                    sqlite3_errmsg(sm2->db));
+                log_sqlite_error_and_abort();
             }
         }
     }
     sqlite3_finalize(stmt);
 
     sm2_prepare_statement(sm2, &sm2->selector,
-        "SELECT type, item FROM sm2"
+        "SELECT type, item, ef, reps FROM sm2"
         "    WHERE next IS NULL OR next >= strftime('%s', 'now')"
         "    ORDER BY RANDOM()"
         "    LIMIT 1");
@@ -128,18 +118,24 @@ sm2_item_t sm2_next(sm2_t* sm2) {
             const int type = sqlite3_column_int(sm2->selector, 0);
             const int len = sqlite3_column_bytes(sm2->selector, 1);
             const unsigned char* txt = sqlite3_column_text(sm2->selector, 1);
+            const double ef = sqlite3_column_double(sm2->selector, 2);
+            const int reps = sqlite3_column_int(sm2->selector, 3);
 
             // The item must own its own string
             char* state = malloc(len + 1);
             memcpy(state, txt, len + 1);
 
-            return (sm2_item_t){ state, type };
+            return (sm2_item_t){
+                .state = state,
+                .mode = type,
+                .ef = ef,
+                .reps = reps
+            };
         }
         case SQLITE_DONE: break;
-        default: log_error_and_abort("Unexpected SQLite result: %s",
-                                     sqlite3_errmsg(sm2->db));
+        default: log_sqlite_error_and_abort();
     };
-    return (sm2_item_t){ NULL, DONE };
+    return (sm2_item_t){ .mode = DONE };
 }
 
 /*  Binds the two item parameters */
@@ -151,25 +147,39 @@ static void item_bind(sqlite3_stmt* s, sm2_item_t item) {
 
 void sm2_update(sm2_t* sm2, sm2_item_t item, int q) {
     if (q < 3) {
+        // Reset the repetition count without changing EF
         item_bind(sm2->incorrect, item);
         if (sqlite3_step(sm2->incorrect) != SQLITE_DONE) {
-            log_error_and_abort("Unexpected SQLite error");
+            log_sqlite_error_and_abort();
         }
     } else {
-        double new_ef = 0.0f;
+        // Update the EF for the given item
+        item.ef = fmax(1.3f, item.ef + 0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
         item_bind(sm2->correct, item);
-        sqlite3_bind_double(sm2->correct, 3, new_ef);
+        sqlite3_bind_double(sm2->correct, 3, item.ef);
         if (sqlite3_step(sm2->correct) != SQLITE_DONE) {
-            log_error_and_abort("Unexpected SQLite error");
+            log_sqlite_error_and_abort();
         }
     }
 
-
     if (q < 4) {
-        item_bind(sm2->retrain, item);
         // Schedule for immediate re-training
+        item_bind(sm2->retrain, item);
+        if (sqlite3_step(sm2->retrain) != SQLITE_DONE) {
+            log_sqlite_error_and_abort();
+        }
     } else {
-        item_bind(sm2->reschedule, item);
         // Calculate next training time based on repetition count
+        item_bind(sm2->reschedule, item);
+        float days;
+        if (item.reps <= 1) {
+            days = 1;
+        } else {
+            days = 6 * pow(item.ef, item.reps - 2);
+        }
+        sqlite3_bind_double(sm2->reschedule, 3, days);
+        if (sqlite3_step(sm2->reschedule) != SQLITE_DONE) {
+            log_sqlite_error_and_abort();
+        }
     }
 }

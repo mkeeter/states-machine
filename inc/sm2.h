@@ -4,6 +4,10 @@ typedef struct sm2_item_ sm2_item_t;
 struct sm2_item_ {
     const char* state;
     enum { POSITION, NAME, DONE } mode;
+
+    // Internal data for the SuperMemo algorithm
+    double ef;
+    int reps;
 };
 
 typedef struct sm2_ sm2_t;

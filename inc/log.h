@@ -50,3 +50,8 @@ FILE* log_preamble(log_type_t t, const char* file, int line);
         }                                                           \
     }                                                               \
 } while(0)
+
+#define log_sqlite_error_and_abort() do {                           \
+    log_error_and_abort("SQLite error: %s",                         \
+                        sqlite3_errmsg(sm2->db));                   \
+} while(0)
