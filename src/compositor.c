@@ -97,7 +97,6 @@ struct compositor_ {
 
     GLuint fbo;
     GLuint tex;
-    GLuint rbo;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -112,9 +111,6 @@ void compositor_resize(compositor_t* compositor,
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0,
                  GL_RED, GL_FLOAT, NULL);
     log_gl_error();
-
-    glBindRenderbuffer(GL_RENDERBUFFER, compositor->rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
 }
 
 compositor_t* compositor_new(uint32_t width, uint32_t height) {
@@ -124,7 +120,6 @@ compositor_t* compositor_new(uint32_t width, uint32_t height) {
     glBindFramebuffer(GL_FRAMEBUFFER, compositor->fbo);
 
     glGenTextures(1, &compositor->tex);
-    glGenRenderbuffers(1, &compositor->rbo);
 
     compositor_resize(compositor, width, height);
 
@@ -134,10 +129,6 @@ compositor_t* compositor_new(uint32_t width, uint32_t height) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                            GL_TEXTURE_2D, compositor->tex, 0);
-
-    /* Bind the depth buffer, which is write-only (so we use a renderbuffer) */
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
-                              GL_RENDERBUFFER, compositor->rbo);
 
     /* Configure the framebuffer to draw to two color buffers */
     GLuint attachments[1] = {GL_COLOR_ATTACHMENT0};
@@ -196,7 +187,6 @@ compositor_t* compositor_new(uint32_t width, uint32_t height) {
 void compositor_delete(compositor_t* compositor) {
     glDeleteFramebuffers(1, &compositor->fbo);
     glDeleteTextures(1, &compositor->tex);
-    glDeleteRenderbuffers(1, &compositor->rbo);
 
     glDeleteBuffers(1, &compositor->vbo);
     glDeleteVertexArrays(1, &compositor->vao);

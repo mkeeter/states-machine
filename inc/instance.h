@@ -5,6 +5,7 @@ struct theme_;
 typedef struct instance_ {
     struct camera_* camera;
     struct compositor_* compositor;
+    struct console_* console;
     struct map_* map;
 
     int mouse_x;

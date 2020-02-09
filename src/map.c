@@ -1,18 +1,10 @@
 #include "camera.h"
+#include "data.h"
 #include "log.h"
 #include "map.h"
 #include "mat.h"
 #include "object.h"
 #include "shader.h"
-
-////////////////////////////////////////////////////////////////////////////////
-// Generated data in data.c
-extern const unsigned STATES_VERT_COUNT;
-extern const unsigned STATES_TRI_COUNT;
-extern const float STATES_VERTS[];
-extern const uint16_t STATES_INDEXES[];
-
-////////////////////////////////////////////////////////////////////////////////
 
 static const GLchar* MAP_VS_SRC = GLSL(330,
 layout(location=0) in vec3 pos;

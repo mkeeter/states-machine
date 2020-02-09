@@ -2,6 +2,7 @@
 SRC :=                  \
 	src/camera          \
 	src/compositor      \
+	src/console         \
 	src/instance        \
 	src/log             \
 	src/main            \
@@ -11,6 +12,7 @@ SRC :=                  \
 	src/version         \
 	src/window          \
 	vendor/glew/glew    \
+	vendor/stb/stb_truetype \
 	data/data           \
 	# end of source files
 
@@ -108,6 +110,8 @@ all: $(GEN) $(TARGET_APP)
 OBJ := $(addprefix $(BUILD_DIR)/,$(SRC:=.o))
 DEP := $(OBJ:.o=.d)
 
+BUILD_SUBDIRS := $(sort $(dir $(OBJ)))
+
 ifeq ($(TARGET), win32-cross)
 $(BUILD_DIR)/erizo.coff: deploy/win32/erizo.rc
 	x86_64-w64-mingw32-windres $? $@
@@ -117,20 +121,20 @@ endif
 $(TARGET_APP): $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
-$(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
+$(BUILD_DIR)/%.o: %.c | $(BUILD_SUBDIRS)
 	$(CC) $(CFLAGS) $(PLATFORM) -c -o $@ -std=c99 $<
-$(BUILD_DIR)/%.o: %.mm | $(BUILD_DIR)
+$(BUILD_DIR)/%.o: %.mm | $(BUILD_SUBDIRS)
 	$(CC) $(CFLAGS) $(PLATFORM) -c -o $@ $<
 
 ifneq ($(MAKECMDGOALS),clean)
 -include $(DEP)
-$(BUILD_DIR)/%.d: %.c | $(BUILD_DIR) $(GEN)
+$(BUILD_DIR)/%.d: %.c | $(BUILD_SUBDIRS) $(GEN)
 	$(CC) $< $(PLATFORM) $(CFLAGS) -MM -MT $(@:.d=.o) > $@
-$(BUILD_DIR)/%.d: %.mm | $(BUILD_DIR) $(GEN)
+$(BUILD_DIR)/%.d: %.mm | $(BUILD_SUBDIRS) $(GEN)
 	$(CC) $< $(PLATFORM) -Iinc -MM -MT $(@:.d=.o) > $@
 endif
 
-$(BUILD_DIR):
+$(BUILD_SUBDIRS):
 	mkdir -p $(sort $(dir $(OBJ)))
 
 .PHONY: clean

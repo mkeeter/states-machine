@@ -1,5 +1,6 @@
 #include "camera.h"
 #include "compositor.h"
+#include "console.h"
 #include "instance.h"
 #include "log.h"
 #include "map.h"
@@ -22,6 +23,7 @@ instance_t* instance_new(void) {
     instance->camera = camera_new(width, height);
     instance->compositor = compositor_new(width, height);
     instance->map = map_new(instance->camera);
+    instance->console = console_new();
 
     /*  This needs to happen after setting up the instance, because
      *  on Windows, the window size callback is invoked when we add

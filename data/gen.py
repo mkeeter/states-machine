@@ -137,3 +137,9 @@ print("const uint16_t STATES_INDEXES[%u] = {" % packed_indexes.size)
 for row in packed_indexes:
     print("    " + ",".join(map(str, row)) + ",")
 print("};")
+
+font = open('Inconsolata.ttf', 'rb').read()
+print("const uint8_t FONT[] = {")
+for (i,c) in enumerate(font):
+    print("%i," % c, end='\n    ' if i and i % 16 == 0 else ' ')
+print("\n};")
