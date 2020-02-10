@@ -3,18 +3,11 @@
 #include "object.h"
 #include "sm2.h"
 
-/*
- *  Implements the SM2 algorithm described at
- *  https://www.supermemo.com/en/archives1990-2015/english/ol/sm2
- */
-float sm2_repetition_interval(unsigned n, float ef) {
-    switch (n) {
-        case 0: log_error_and_abort("Invalid repetition count");
-        case 1: return 1;
-        case 2: return 6;
-        default: return sm2_repetition_interval(n - 1, ef) * ef;
-    }
-}
+#define SQLITE_CHECKED(cond) do {       \
+    if ((cond) != SQLITE_OK) {          \
+        log_sqlite_error_and_abort();   \
+    }                                   \
+} while(0)
 
 struct sm2_ {
     sqlite3* db;
@@ -47,21 +40,16 @@ static void sm2_prepare_statement(sm2_t* sm2, sqlite3_stmt** ptr,
 sm2_t* sm2_new() {
     OBJECT_ALLOC(sm2);
 
-    if (sqlite3_open("sm.sqlite", &sm2->db) != SQLITE_OK) {
-        log_sqlite_error_and_abort();
-    }
+    SQLITE_CHECKED(sqlite3_open("sm.sqlite", &sm2->db));
 
     char* err_msg;
-    if (sqlite3_exec(sm2->db, "CREATE TABLE IF NOT EXISTS sm2 ("
+    SQLITE_CHECKED(sqlite3_exec(sm2->db, "CREATE TABLE IF NOT EXISTS sm2 ("
                 "type INTEGER NOT NULL,"
                 "item TEXT NOT NULL,"
                 "ef REAL NOT NULL,"
                 "next INT,"
                 "reps INT"
-                ")", NULL, NULL, &err_msg) != SQLITE_OK)
-    {
-        log_error_and_abort("Could not create table: %s", err_msg);
-    }
+                ")", NULL, NULL, &err_msg));
 
     sqlite3_stmt* stmt;
     sm2_prepare_statement(sm2, &stmt,
@@ -70,7 +58,7 @@ sm2_t* sm2_new() {
     for (unsigned m=0; m < 2; ++m) {
         for (unsigned state=0; state < STATES_COUNT; ++state) {
             sqlite3_reset(stmt);
-            // No need to clear bindings, since we rebind everything here
+            /* No need to clear bindings, since we rebind everything here */
             sqlite3_bind_int(stmt, 1, m);
             sqlite3_bind_text(stmt, 2, STATES_NAMES[state], -1, SQLITE_STATIC);
             if (sqlite3_step(stmt) != SQLITE_DONE) {
@@ -111,6 +99,7 @@ void sm2_delete(sm2_t* sm2) {
     free(sm2);
 }
 
+/*  Picks a random item that's scheduled for learning */
 sm2_item_t sm2_next(sm2_t* sm2) {
     sqlite3_reset(sm2->selector);
     switch (sqlite3_step(sm2->selector)) {
@@ -139,45 +128,43 @@ sm2_item_t sm2_next(sm2_t* sm2) {
 }
 
 /*  Binds the two item parameters */
-static void item_bind(sqlite3_stmt* s, sm2_item_t item) {
-    sqlite3_reset(s);
-    sqlite3_bind_int(s, 1, item.mode);
-    sqlite3_bind_text(s, 2, item.state, -1, SQLITE_STATIC);
+static void sm2_item_bind(sm2_t* sm2, sqlite3_stmt* s, sm2_item_t item) {
+    SQLITE_CHECKED(sqlite3_reset(s));
+    SQLITE_CHECKED(sqlite3_bind_int(s, 1, item.mode));
+    SQLITE_CHECKED(sqlite3_bind_text(s, 2, item.state, -1, SQLITE_STATIC));
 }
 
 void sm2_update(sm2_t* sm2, sm2_item_t item, int q) {
+    /*  Implements the SM2 algorithm described at
+     *  https://www.supermemo.com/en/archives1990-2015/english/ol/sm2 */
     if (q < 3) {
-        // Reset the repetition count without changing EF
-        item_bind(sm2->incorrect, item);
+        /* Reset the repetition count without changing EF */
+        sm2_item_bind(sm2, sm2->incorrect, item);
         if (sqlite3_step(sm2->incorrect) != SQLITE_DONE) {
             log_sqlite_error_and_abort();
         }
     } else {
-        // Update the EF for the given item
-        item.ef = fmax(1.3f, item.ef + 0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
-        item_bind(sm2->correct, item);
-        sqlite3_bind_double(sm2->correct, 3, item.ef);
+        /* Update the EF for the given item */
+        item.ef = fmax(1.3, item.ef + 0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
+        sm2_item_bind(sm2, sm2->correct, item);
+        SQLITE_CHECKED(sqlite3_bind_double(sm2->correct, 3, item.ef));
         if (sqlite3_step(sm2->correct) != SQLITE_DONE) {
             log_sqlite_error_and_abort();
         }
     }
 
     if (q < 4) {
-        // Schedule for immediate re-training
-        item_bind(sm2->retrain, item);
+        /* Schedule for immediate re-training */
+        sm2_item_bind(sm2, sm2->retrain, item);
         if (sqlite3_step(sm2->retrain) != SQLITE_DONE) {
             log_sqlite_error_and_abort();
         }
     } else {
-        // Calculate next training time based on repetition count
-        item_bind(sm2->reschedule, item);
-        float days;
-        if (item.reps <= 1) {
-            days = 1;
-        } else {
-            days = 6 * pow(item.ef, item.reps - 2);
-        }
-        sqlite3_bind_double(sm2->reschedule, 3, days);
+        /* Calculate next training time based on repetition count */
+        const float days = (item.reps <= 1)
+            ? 1 : (6 * pow(item.ef, item.reps - 2));
+        sm2_item_bind(sm2, sm2->reschedule, item);
+        SQLITE_CHECKED(sqlite3_bind_double(sm2->reschedule, 3, days));
         if (sqlite3_step(sm2->reschedule) != SQLITE_DONE) {
             log_sqlite_error_and_abort();
         }
