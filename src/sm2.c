@@ -55,15 +55,18 @@ sm2_t* sm2_new() {
     sm2_prepare_statement(sm2, &stmt,
         "INSERT OR IGNORE INTO sm2(type, item, ef, reps)"
         "    VALUES (?, ?, 2.5, 0)");
-    for (unsigned m=0; m < 2; ++m) {
-        for (unsigned state=0; state < STATES_COUNT; ++state) {
-            sqlite3_reset(stmt);
-            /* No need to clear bindings, since we rebind everything here */
-            sqlite3_bind_int(stmt, 1, m);
-            sqlite3_bind_text(stmt, 2, STATES_NAMES[state], -1, SQLITE_STATIC);
-            if (sqlite3_step(stmt) != SQLITE_DONE) {
-                log_sqlite_error_and_abort();
-            }
+    for (unsigned state=0; state < STATES_COUNT; ++state) {
+        sqlite3_reset(stmt);
+        sqlite3_bind_int(stmt, 1, ITEM_MODE_POSITION);
+        sqlite3_bind_text(stmt, 2, STATES_NAMES[state], -1, SQLITE_STATIC);
+        if (sqlite3_step(stmt) != SQLITE_DONE) {
+            log_sqlite_error_and_abort();
+        }
+
+        sqlite3_reset(stmt);
+        sqlite3_bind_int(stmt, 1, ITEM_MODE_NAME);
+        if (sqlite3_step(stmt) != SQLITE_DONE) {
+            log_sqlite_error_and_abort();
         }
     }
     sqlite3_finalize(stmt);
@@ -100,7 +103,8 @@ void sm2_delete(sm2_t* sm2) {
 }
 
 /*  Picks a random item that's scheduled for learning */
-sm2_item_t sm2_next(sm2_t* sm2) {
+sm2_item_t* sm2_next(sm2_t* sm2) {
+    sm2_item_t* out = calloc(sizeof(sm2_item_t), 1);
     sqlite3_reset(sm2->selector);
     switch (sqlite3_step(sm2->selector)) {
         case SQLITE_ROW: {
@@ -114,17 +118,21 @@ sm2_item_t sm2_next(sm2_t* sm2) {
             char* state = malloc(len + 1);
             memcpy(state, txt, len + 1);
 
-            return (sm2_item_t){
+            *out = (sm2_item_t){
                 .state = state,
                 .mode = type,
                 .ef = ef,
                 .reps = reps
             };
+            break;
         }
-        case SQLITE_DONE: break;
+        case SQLITE_DONE: {
+            *out = (sm2_item_t){ .mode = ITEM_MODE_DONE };
+            break;
+        }
         default: log_sqlite_error_and_abort();
     };
-    return (sm2_item_t){ .mode = DONE };
+    return out;
 }
 
 /*  Binds the two item parameters */
@@ -169,4 +177,9 @@ void sm2_update(sm2_t* sm2, sm2_item_t item, int q) {
             log_sqlite_error_and_abort();
         }
     }
+}
+
+void sm2_item_delete(sm2_item_t* item) {
+    free(item->state);
+    free(item);
 }

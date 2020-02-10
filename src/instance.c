@@ -27,7 +27,20 @@ instance_t* instance_new(void) {
     instance->map = map_new(instance->camera);
     instance->console = console_new();
 
+    size_t longest_name = 0;
+    for (unsigned i=0; i < STATES_COUNT; ++i) {
+        size_t len = strlen(STATES_NAMES[i]);
+        if (len > longest_name) {
+            log_trace("Found new longest name: %s", STATES_NAMES[i]);
+            for (unsigned j=longest_name; j < len; ++j) {
+                instance->buf[j] = '_';
+            }
+            instance->buf[len] = 0;
+            longest_name = len;
+        }
+    }
     instance->sm2 = sm2_new();
+    instance->active = sm2_next(instance->sm2);
 
     /*  This needs to happen after setting up the instance, because
      *  on Windows, the window size callback is invoked when we add
@@ -107,11 +120,19 @@ void instance_cb_mouse_click(instance_t* instance, int button,
     if (action == GLFW_PRESS) {
         if (button == GLFW_MOUSE_BUTTON_1) {
             camera_begin_pan(instance->camera);
-        } else if (button == GLFW_MOUSE_BUTTON_2) {
-            camera_begin_rot(instance->camera);
         }
-    } else {
-        camera_end_drag(instance->camera);
+    } else if (!camera_end_drag(instance->camera) &&
+               instance->ui == UI_QUESTION &&
+               instance->active->mode == ITEM_MODE_POSITION)
+    {
+        if (!strcmp(instance->active->state,
+                    STATES_NAMES[instance->active_state - 1]))
+        {
+            instance->ui = UI_ANSWER_RIGHT;
+        } else {
+            instance->wrong_state = instance->active_state;
+            instance->ui = UI_ANSWER_WRONG;
+        }
     }
 }
 
@@ -120,6 +141,28 @@ void instance_cb_mouse_scroll(instance_t* instance,
 {
     (void)xoffset;
     camera_zoom(instance->camera, yoffset);
+}
+
+void instance_cb_key(instance_t* instance, int key, int scancode, int action, int mods)
+{
+    if (instance->active->mode == ITEM_MODE_NAME &&
+        key == GLFW_KEY_BACKSPACE &&
+        (action == GLFW_PRESS || action == GLFW_REPEAT) &&
+        instance->buf_index)
+    {
+        instance->buf[--instance->buf_index] = '_';
+    }
+}
+
+void instance_cb_char(instance_t* instance, unsigned codepoint)
+{
+    if (instance->active->mode == ITEM_MODE_NAME &&
+        instance->ui == UI_QUESTION &&
+        instance->buf[instance->buf_index] &&
+        codepoint >= ' ' && codepoint < '~')
+    {
+        instance->buf[instance->buf_index++] = codepoint;
+    }
 }
 
 bool instance_draw(instance_t* instance) {
@@ -138,11 +181,45 @@ bool instance_draw(instance_t* instance) {
     glClear(GL_COLOR_BUFFER_BIT);
     compositor_draw(instance->compositor, instance->active_state);
 
-    if (instance->active_state) {
-        char buf[2048];
-        snprintf(buf, sizeof(buf), "Mouse is over \x01%s", STATES_NAMES[instance->active_state - 1]);
-        console_draw(instance->console, buf);
+    char buf[64];
+    switch (instance->active->mode) {
+        case ITEM_MODE_NONE:    break;
+        case ITEM_MODE_DONE:
+            snprintf(buf, sizeof(buf), "Nothing to review!");
+            break;
+        case ITEM_MODE_NAME: {
+            switch (instance->ui) {
+                case UI_QUESTION:
+                    snprintf(buf, sizeof(buf), "\x01This is \x02%s", instance->buf);
+                    break;
+                case UI_ANSWER_RIGHT:
+                    snprintf(buf, sizeof(buf), "Correct!");
+                    break;
+                case UI_ANSWER_WRONG:
+                    snprintf(buf, sizeof(buf), "\x01No, that is \x02%s",
+                            STATES_NAMES[instance->wrong_state - 1]);
+                    break;
+            }
+            break;
+        }
+        case ITEM_MODE_POSITION: {
+            switch (instance->ui) {
+                case UI_QUESTION:
+                    snprintf(buf, sizeof(buf), "\x01Where is \x02%s?",
+                             instance->active->state);
+                    break;
+                case UI_ANSWER_RIGHT:
+                    snprintf(buf, sizeof(buf), "Correct!");
+                    break;
+                case UI_ANSWER_WRONG:
+                    snprintf(buf, sizeof(buf), "\x01No, that is \x02%s",
+                            STATES_NAMES[instance->wrong_state - 1]);
+                    break;
+            }
+            break;
+        }
     }
+    console_draw(instance->console, buf);
 
     glfwSwapBuffers(instance->window);
     return needs_redraw;

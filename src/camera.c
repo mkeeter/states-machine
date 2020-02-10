@@ -45,7 +45,6 @@ struct camera_ {
 
     /*  Mouse position and state tracking */
     enum { CAMERA_IDLE,
-           CAMERA_ROT,
            CAMERA_PAN,
            CAMERA_ANIM,
     } state;
@@ -54,6 +53,8 @@ struct camera_ {
     float click_pos[2];
     vec3_t start; /* Flexible drag data, depends on mode */
     mat4_t drag_mat;
+
+    bool did_drag;
 
     anim_t* anim;
 };
@@ -162,13 +163,11 @@ void camera_set_mouse_pos(camera_t* camera, float x, float y) {
     camera->mouse_pos[0] = x;
     camera->mouse_pos[1] = y;
 
-    const float dx = x - camera->click_pos[0];
-    const float dy = y - camera->click_pos[1];
-
     switch (camera->state) {
         case CAMERA_IDLE:   /* Fallthrough */
         case CAMERA_ANIM:   break;
         case CAMERA_PAN: {
+            camera->did_drag = true;
             vec3_t v = {{camera->click_pos[0], camera->click_pos[1], 0.0f}};
             v = mat4_apply(camera->drag_mat, v);
             vec3_t w = {{camera->mouse_pos[0], camera->mouse_pos[1], 0.0f}};
@@ -179,31 +178,6 @@ void camera_set_mouse_pos(camera_t* camera, float x, float y) {
             camera_update_view(camera);
             break;
         }
-        case CAMERA_ROT: {
-            const float start_pitch = camera->start.v[0];
-            const float start_yaw = camera->start.v[1];
-
-            /*  Update pitch and clamp values */
-            camera->pitch = start_pitch + dy * 2.0f;
-            if (camera->pitch < -M_PI) {
-                camera->pitch = -M_PI;
-            } else if (camera->pitch > 0.0f) {
-                camera->pitch = 0.0f;
-            }
-
-            /*  Update yaw and keep it under 360 degrees */
-            camera->yaw = start_yaw - dx * 2.0f;
-            while (camera->yaw < 0.0f) {
-                camera->yaw += 2.0f * M_PI;
-            }
-            while (camera->yaw > 2.0f * M_PI) {
-                camera->yaw -= 2.0f * M_PI;
-            }
-
-            /*  Rebuild view matrix with new values */
-            camera_update_view(camera);
-            break;
-         }
     }
 }
 
@@ -253,21 +227,12 @@ void camera_begin_pan(camera_t* camera) {
     camera->start = camera->center;
     camera->drag_mat = camera_vpi_mat(camera);
     camera->state = CAMERA_PAN;
+    camera->did_drag = false;
 }
 
-void camera_begin_rot(camera_t* camera) {
-    if (camera->state != CAMERA_IDLE) {
-        log_warn("Cannot start rotating in state %i", camera->state);
-        return;
-    }
-    memcpy(camera->click_pos, camera->mouse_pos, sizeof(camera->mouse_pos));
-    camera->start.v[0] = camera->pitch;
-    camera->start.v[1] = camera->yaw;
-    camera->state = CAMERA_ROT;
-}
-
-void camera_end_drag(camera_t* camera) {
+bool camera_end_drag(camera_t* camera) {
     camera->state = CAMERA_IDLE;
+    return camera->did_drag;
 }
 
 void camera_zoom(camera_t* camera, float amount) {

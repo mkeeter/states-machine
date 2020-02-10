@@ -26,12 +26,12 @@ void camera_set_model(camera_t* camera, float* center, float scale);
 
 /*  Mouse handling functions */
 void camera_begin_pan(camera_t* camera);
-void camera_begin_rot(camera_t* camera);
-void camera_end_drag(camera_t* camera);
+
+/*  Returns true if the camera actually dragged anywhere */
+bool camera_end_drag(camera_t* camera);
 void camera_zoom(camera_t* camera, float amount);
 
-/*  Assigns the current mouse position, causing a rotation or
- *  pan if the button was already held down. */
+/*  Assigns the current mouse position, panning if the button is down */
 void camera_set_mouse_pos(camera_t* camera, float x, float y);
 
 /*  Schedules a camera animation to update projection */

@@ -30,6 +30,19 @@ static void cb_mouse_click(GLFWwindow* window, int button,
     instance_cb_mouse_click(instance, button, action, mods);
 }
 
+static void cb_key(GLFWwindow* window, int key, int scancode,
+                   int action, int mods)
+{
+    instance_t* instance = (instance_t*)glfwGetWindowUserPointer(window);
+    instance_cb_key(instance, key, scancode, action, mods);
+}
+
+static void cb_char(GLFWwindow* window, unsigned codepoint)
+{
+    instance_t* instance = (instance_t*)glfwGetWindowUserPointer(window);
+    instance_cb_char(instance, codepoint);
+}
+
 static void cb_close(GLFWwindow* window)
 {
     //  Kick the main loop, so that it exits if all windows are closed
@@ -50,6 +63,8 @@ void window_bind(GLFWwindow* window, instance_t* instance) {
     glfwSetScrollCallback(window, cb_mouse_scroll);
     glfwSetMouseButtonCallback(window, cb_mouse_click);
     glfwSetWindowCloseCallback(window, cb_close);
+    glfwSetCharCallback(window, cb_char);
+    glfwSetKeyCallback(window, cb_key);
 
     platform_window_bind(window);
 }
