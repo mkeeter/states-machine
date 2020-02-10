@@ -43,6 +43,9 @@ void camera_anim_proj_orthographic(camera_t* camera);
  *  returns true (so the caller should schedule a redraw). */
 bool camera_check_anim(camera_t* camera);
 
+/*  Returns the width/height aspect ratio */
+float camera_aspect_ratio(camera_t* camera);
+
 /*  Looks up uniforms for camera binding */
 camera_uniforms_t camera_get_uniforms(GLuint prog);
 

@@ -6,65 +6,35 @@
 static const GLchar* COMPOSITOR_VS_SRC = GLSL(330,
 layout(location=0) in vec2 pos;
 
-uniform vec3 corners[4];
-
-out vec4 grad_color;
-
 void main() {
-    if (pos.x < 0.0f && pos.y < 0.0f) {
-        grad_color = vec4(corners[0], 1.0f);
-    } else if (pos.x > 0.0f && pos.y < 0.0f) {
-        grad_color = vec4(corners[1], 1.0f);
-    } else if (pos.x < 0.0f && pos.y > 0.0f) {
-        grad_color = vec4(corners[2], 1.0f);
-    } else if (pos.x > 0.0f && pos.y > 0.0f) {
-        grad_color = vec4(corners[3], 1.0f);
-    }
-
     gl_Position = vec4(pos, 1.0f, 1.0f);
 }
 );
 
 static const GLchar* COMPOSITOR_FS_SRC = GLSL(330,
-in vec4 grad_color;
 out vec4 out_color;
 
 uniform sampler2D tex;
 uniform int active_state;
 
-vec4 shade_state(int state, int ix, int iy) {
-    for (int x = ix - 1; x <= ix; ++x) {
-        for (int y = iy - 1; y <= iy; ++y) {
-            float u = texelFetch(tex, ivec2(x, y), 0).r;
-            if (u != state) {
-                // State boundaries are black
-                return vec4(0.0f, 0.0f, 0.0f, 1.0f);
-            }
-        }
-    }
-
-    float r = (fract(sin(state * 43758.54123)) - 0.5f) / 5.0f + 1.0f;
-    return vec4(0.5f * r, 0.5f * r, 0.5f * r, 1.0f);
+vec3 color_hex(int c) {
+    return vec3(((c >> 16) & 255) / 255.0f,
+                ((c >>  8) & 255) / 255.0f,
+                ((c >>  0) & 255) / 255.0f);
 }
 
-vec4 shade_backdrop(vec4 base, int ix, int iy) {
-    const float r_shadow = 1;
-    const int d = int(r_shadow * 3.0f);
-
-    float r_min = d;
-    for (int x = ix - d; x <= ix + d; ++x) {
-        for (int y = iy - d; y <= iy + d; ++y) {
-            float r = sqrt((x - ix)*(x - ix) + (y - iy)*(y - iy));
-            if (r > d || r == 0.0f) {
-                continue;
-            }
-            float u = texelFetch(tex, ivec2(x, y), 0).r;
-            if (u > 0.0f) {
-                r_min = min(r, r_min);
+bool is_edge(float state, int ix, int iy) {
+    for (int x = ix - 1; x <= ix; ++x) {
+        for (int y = iy - 1; y <= iy; ++y) {
+            if (x != ix || y != iy) {
+                float u = texelFetch(tex, ivec2(x, y), 0).r;
+                if (u != state) {
+                    return true;
+                }
             }
         }
     }
-    return base * (1.0 - exp(-(r_min * r_min) / (2*r_shadow*r_shadow)));
+    return false;
 }
 
 void main() {
@@ -72,14 +42,16 @@ void main() {
     int iy = int(gl_FragCoord.y + 0.5f);
     float t = texelFetch(tex, ivec2(ix, iy), 0).r;
 
-    if (t > 0.0f) {
-        if (t == active_state) {
-            out_color = 1.5 * shade_state(int(t), ix, iy);
+    if (is_edge(t, ix, iy)) {
+        out_color = vec4(color_hex(0x827717), 1.0f);
+    } else if (t > 0.0f) {
+         if (t == active_state) {
+            out_color = vec4(color_hex(0xF9FBE7), 1.0f);
         } else {
-            out_color = shade_state(int(t), ix, iy);
+            out_color = vec4(color_hex(0xF0F4C3), 1.0f);
         }
     } else {
-        out_color = shade_backdrop(vec4(1.0f, 1.0f, 1.0f, 1.0f), ix, iy);
+        out_color = vec4(color_hex(0xE1F5FE), 1.0f);
     }
 }
 );
@@ -91,7 +63,6 @@ struct compositor_ {
     GLuint vbo;
 
     shader_t shader;
-    GLint u_corners;
     GLint u_tex;
     GLint u_active_state;
 
@@ -158,11 +129,9 @@ compositor_t* compositor_new(uint32_t width, uint32_t height) {
 
     {   /* Make a temporary struct to unpack local uniforms */
         GLint prog = compositor->shader.prog;
-        struct { GLint corners, tex, active_state; } u;
-        SHADER_GET_UNIFORM(corners);
+        struct { GLint tex, active_state; } u;
         SHADER_GET_UNIFORM(tex);
         SHADER_GET_UNIFORM(active_state);
-        compositor->u_corners = u.corners;
         compositor->u_tex = u.tex;
         compositor->u_active_state = u.active_state;
     }
@@ -199,40 +168,10 @@ void compositor_bind(compositor_t* compositor) {
     glBindFramebuffer(GL_FRAMEBUFFER, compositor->fbo);
 }
 
-static void from_hex(const char* hex, float f[3]) {
-    if (strlen(hex) != 6) {
-        log_error_and_abort("Invalid hex string '%s'", hex);
-    }
-    uint8_t c[3] = {0};
-    for (unsigned i=0; i < 6; ++i) {
-        unsigned v = 0;
-        if (hex[i] >= 'a' && hex[i] <= 'f') {
-            v = hex[i] - 'a' + 10;
-        } else if (hex[i] >= 'A' && hex[i] <= 'F') {
-            v = hex[i] - 'A' + 10;
-        } else if (hex[i] >= '0' && hex[i] <= '9') {
-            v = hex[i] - '0';
-        } else {
-            log_error_and_abort("Invalid hex character '%c'", hex[i]);
-        }
-        c[i / 2] = (c[i / 2] << 4) + v;
-    }
-    for (unsigned i=0; i < 3; ++i) {
-        f[i] = c[i] / 255.0f;
-    }
-}
-
 void compositor_draw(compositor_t* compositor, int active_state) {
     glDisable(GL_DEPTH_TEST);
     glUseProgram(compositor->shader.prog);
 
-    float corners[4][3];
-    from_hex("002833", corners[0]);
-    from_hex("002833", corners[1]);
-    from_hex("003440", corners[2]);
-    from_hex("002833", corners[3]);
-
-    glUniform3fv(compositor->u_corners, 4, (const float*)corners);
     glBindVertexArray(compositor->vao);
 
     glActiveTexture(GL_TEXTURE0);

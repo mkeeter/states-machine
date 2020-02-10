@@ -135,7 +135,7 @@ void console_delete(console_t* console) {
     free(console);
 }
 
-void console_draw(console_t* console, const char* s) {
+void console_draw(console_t* console, float aspect_ratio, const char* s) {
     float x = 0.0f;
     float y = 0.0f;
     float buf[4096];
@@ -143,7 +143,7 @@ void console_draw(console_t* console, const char* s) {
     float shade = 1.0f;
     while (*s) {
         if (*s == 1) {
-            shade = 0.5f;
+            shade = 0.7f;
         } else if (*s == 2) {
             shade = 1.0f;
         } else {
@@ -174,8 +174,8 @@ void console_draw(console_t* console, const char* s) {
     x /= 2.0f;  // Prepare to center the text
     const float scale = 0.1f / FONT_SIZE_PX;
     for (unsigned j=0; j < i; j += 5) {
-        buf[j] = (buf[j] - x) * scale;
-        buf[j + 1] = -buf[j + 1] * scale + 0.6;
+        buf[j] = (buf[j] - x) * scale / aspect_ratio;
+        buf[j + 1] = -buf[j + 1] * scale + 0.7;
     }
 
     glUseProgram(console->shader.prog);

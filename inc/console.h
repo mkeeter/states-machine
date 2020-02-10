@@ -3,4 +3,4 @@
 typedef struct console_ console_t;
 
 console_t* console_new(void);
-void console_draw(console_t* console, const char* s);
+void console_draw(console_t* console, float aspect_ratio, const char* s);

@@ -304,3 +304,7 @@ bool camera_check_anim(camera_t* camera) {
     }
     return !done;
 }
+
+float camera_aspect_ratio(camera_t* camera) {
+    return camera->width / (float)camera->height;
+}

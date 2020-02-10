@@ -219,7 +219,8 @@ bool instance_draw(instance_t* instance) {
             break;
         }
     }
-    console_draw(instance->console, buf);
+    console_draw(instance->console,
+                 camera_aspect_ratio(instance->camera), buf);
 
     glfwSwapBuffers(instance->window);
     return needs_redraw;
