@@ -40,7 +40,7 @@ instance_t* instance_new(void) {
         }
     }
     instance->sm2 = sm2_new();
-    instance->active = sm2_next(instance->sm2);
+    instance_next(instance);
 
     /*  This needs to happen after setting up the instance, because
      *  on Windows, the window size callback is invoked when we add
@@ -65,7 +65,29 @@ void instance_delete(instance_t* instance) {
     OBJECT_DELETE_MEMBER(instance, window);
     OBJECT_DELETE_MEMBER(instance, compositor);
     OBJECT_DELETE_MEMBER(instance, map);
+    sm2_item_delete(instance->active);
     free(instance);
+}
+
+void instance_next(instance_t* instance) {
+    if (instance->active) {
+        sm2_item_delete(instance->active);
+        instance->active = NULL;
+    }
+    instance->active = sm2_next(instance->sm2);
+    instance->ui = UI_QUESTION;
+    if (instance->active->mode == ITEM_MODE_NAME) {
+        instance->active_state = 0;
+        for (unsigned i=0; i < STATES_COUNT; ++i) {
+            if (!strcmp(instance->active->state, STATES_NAMES[i])) {
+                instance->active_state = i + 1;
+            }
+        }
+        if (!instance->active_state) {
+            log_error_and_abort("Could not find state %s",
+                                instance->active->state);
+        }
+    }
 }
 
 /******************************************************************************/
@@ -109,7 +131,9 @@ void instance_update_active_state(instance_t* instance) {
 void instance_cb_mouse_pos(instance_t* instance, float xpos, float ypos) {
     camera_get_fb_pixel(instance->camera, xpos, ypos,
                         &instance->mouse_x, &instance->mouse_y);
-    instance_update_active_state(instance);
+    if (instance->active->mode == ITEM_MODE_POSITION) {
+        instance_update_active_state(instance);
+    }
     camera_set_mouse_pos(instance->camera, xpos, ypos);
 }
 
@@ -123,7 +147,8 @@ void instance_cb_mouse_click(instance_t* instance, int button,
         }
     } else if (!camera_end_drag(instance->camera) &&
                instance->ui == UI_QUESTION &&
-               instance->active->mode == ITEM_MODE_POSITION)
+               instance->active->mode == ITEM_MODE_POSITION &&
+               instance->active_state)
     {
         if (!strcmp(instance->active->state,
                     STATES_NAMES[instance->active_state - 1]))
@@ -145,12 +170,30 @@ void instance_cb_mouse_scroll(instance_t* instance,
 
 void instance_cb_key(instance_t* instance, int key, int scancode, int action, int mods)
 {
-    if (instance->active->mode == ITEM_MODE_NAME &&
-        key == GLFW_KEY_BACKSPACE &&
-        (action == GLFW_PRESS || action == GLFW_REPEAT) &&
-        instance->buf_index)
-    {
-        instance->buf[--instance->buf_index] = '_';
+    if (instance->active->mode == ITEM_MODE_NAME) {
+        if (key == GLFW_KEY_BACKSPACE &&
+            (action == GLFW_PRESS || action == GLFW_REPEAT) &&
+            instance->buf_index)
+        {
+            instance->buf[--instance->buf_index] = '_';
+        }
+        else if (key == GLFW_KEY_ENTER && action == GLFW_RELEASE)
+        {
+            if (!strncmp(instance->buf, instance->active->state,
+                         instance->buf_index - 1))
+            {
+                instance->ui = UI_ANSWER_RIGHT;
+            } else {
+                instance->wrong_state = 0;
+                for (unsigned i=0; i < STATES_COUNT; ++i) {
+                    if (!strncmp(instance->buf, STATES_NAMES[i],
+                                 instance->buf_index - 1)) {
+                        instance->wrong_state = i + 1;
+                    }
+                }
+                instance->ui = UI_ANSWER_WRONG;
+            }
+        }
     }
 }
 
@@ -196,8 +239,8 @@ bool instance_draw(instance_t* instance) {
                     snprintf(buf, sizeof(buf), "Correct!");
                     break;
                 case UI_ANSWER_WRONG:
-                    snprintf(buf, sizeof(buf), "\x01No, that is \x02%s",
-                            STATES_NAMES[instance->wrong_state - 1]);
+                    snprintf(buf, sizeof(buf), "\x01No, it is \x02%s",
+                             instance->active->state);
                     break;
             }
             break;
@@ -219,8 +262,20 @@ bool instance_draw(instance_t* instance) {
             break;
         }
     }
-    console_draw(instance->console,
-                 camera_aspect_ratio(instance->camera), buf);
+    if (instance->ui == UI_QUESTION) {
+        console_draw(instance->console, buf,
+                     camera_aspect_ratio(instance->camera), 0.7f);
+    } else {
+        console_draw(instance->console, buf,
+                     camera_aspect_ratio(instance->camera), 0.8f);
+        if (instance->ui == UI_ANSWER_RIGHT) {
+            console_draw(instance->console, "\x01Hard 1 2 3\x02 4 5 6 Easy",
+                         camera_aspect_ratio(instance->camera), 0.6f);
+        } else {
+            console_draw(instance->console, "\x02Hard 1 2 3\x01 4 5 6 Easy",
+                         camera_aspect_ratio(instance->camera), 0.6f);
+        }
+    }
 
     glfwSwapBuffers(instance->window);
     return needs_redraw;

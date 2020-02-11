@@ -12,6 +12,9 @@ typedef struct instance_ {
     /*  Mouse position is in framebuffer pixels */
     int mouse_x;
     int mouse_y;
+
+    /* pulled from active item in name mode, otherwise pulled
+     * from mouse cursor position in callback. */
     int active_state;
 
     struct sm2_item_* active;
@@ -34,6 +37,7 @@ instance_t* instance_new(void);
 void instance_delete(instance_t* instance);
 
 void instance_update_active_state(instance_t* instance);
+void instance_next(instance_t* instance);
 
 /*  Draws an instance
  *
