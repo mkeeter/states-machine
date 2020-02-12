@@ -76,6 +76,14 @@ void instance_next(instance_t* instance) {
     }
     instance->active = sm2_next(instance->sm2);
     instance->ui = UI_QUESTION;
+
+    // Reset the text buffer
+    for (char* b = instance->buf; *b; ++b) {
+        *b = '_';
+    }
+    instance->buf_index = 0;
+    instance->wrong_state = 0;
+
     if (instance->active->mode == ITEM_MODE_NAME) {
         instance->active_state = 0;
         for (unsigned i=0; i < STATES_COUNT; ++i) {
@@ -87,6 +95,8 @@ void instance_next(instance_t* instance) {
             log_error_and_abort("Could not find state %s",
                                 instance->active->state);
         }
+    } else if (instance->active->mode == ITEM_MODE_POSITION) {
+        instance_update_active_state(instance);
     }
 }
 
@@ -131,7 +141,9 @@ void instance_update_active_state(instance_t* instance) {
 void instance_cb_mouse_pos(instance_t* instance, float xpos, float ypos) {
     camera_get_fb_pixel(instance->camera, xpos, ypos,
                         &instance->mouse_x, &instance->mouse_y);
-    if (instance->active->mode == ITEM_MODE_POSITION) {
+    if (instance->active->mode == ITEM_MODE_POSITION &&
+        instance->ui == UI_QUESTION)
+    {
         instance_update_active_state(instance);
     }
     camera_set_mouse_pos(instance->camera, xpos, ypos);
@@ -156,6 +168,12 @@ void instance_cb_mouse_click(instance_t* instance, int button,
             instance->ui = UI_ANSWER_RIGHT;
         } else {
             instance->wrong_state = instance->active_state;
+            for (unsigned i=0; i < STATES_COUNT; ++i) {
+                if (!strcmp(instance->active->state, STATES_NAMES[i])) {
+                    instance->active_state = i + 1;
+                    break;
+                }
+            }
             instance->ui = UI_ANSWER_WRONG;
         }
     }
@@ -238,7 +256,8 @@ bool instance_draw(instance_t* instance) {
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClear(GL_COLOR_BUFFER_BIT);
-    compositor_draw(instance->compositor, instance->active_state);
+    compositor_draw(instance->compositor, instance->active_state,
+                    instance->wrong_state);
 
     char buf[64];
     switch (instance->active->mode) {

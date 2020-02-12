@@ -37,6 +37,13 @@ static void sm2_prepare_statement(sm2_t* sm2, sqlite3_stmt** ptr,
     }
 }
 
+/*  Binds the two item parameters */
+static void sm2_item_bind(sm2_t* sm2, sqlite3_stmt* s, sm2_item_t* item) {
+    SQLITE_CHECKED(sqlite3_reset(s));
+    SQLITE_CHECKED(sqlite3_bind_int(s, 1, item->mode));
+    SQLITE_CHECKED(sqlite3_bind_text(s, 2, item->state, -1, SQLITE_STATIC));
+}
+
 sm2_t* sm2_new() {
     OBJECT_ALLOC(sm2);
 
@@ -51,25 +58,38 @@ sm2_t* sm2_new() {
                 "reps INT"
                 ")", NULL, NULL, &err_msg));
 
-    sqlite3_stmt* stmt;
-    sm2_prepare_statement(sm2, &stmt,
-        "INSERT OR IGNORE INTO sm2(type, item, ef, reps)"
-        "    VALUES (?, ?, 2.5, 0)");
-    for (unsigned state=0; state < STATES_COUNT; ++state) {
-        sqlite3_reset(stmt);
-        sqlite3_bind_int(stmt, 1, ITEM_MODE_POSITION);
-        sqlite3_bind_text(stmt, 2, STATES_NAMES[state], -1, SQLITE_STATIC);
-        if (sqlite3_step(stmt) != SQLITE_DONE) {
-            log_sqlite_error_and_abort();
-        }
+    sqlite3_stmt* check_if_present;
+    sm2_prepare_statement(sm2, &check_if_present,
+        "SELECT * FROM sm2 WHERE type = ?1 AND item = ?2");
 
-        sqlite3_reset(stmt);
-        sqlite3_bind_int(stmt, 1, ITEM_MODE_NAME);
-        if (sqlite3_step(stmt) != SQLITE_DONE) {
-            log_sqlite_error_and_abort();
+    sqlite3_stmt* insert_state;
+    sm2_prepare_statement(sm2, &insert_state,
+        "INSERT INTO sm2(type, item, ef, reps)"
+        "    VALUES (?1, ?2, 2.5, 0)");
+
+    for (unsigned state=0; state < STATES_COUNT; ++state) {
+        for (unsigned j=ITEM_MODE_POSITION; j <= ITEM_MODE_NAME; ++j) {
+            sm2_item_t item = (sm2_item_t){
+                .mode=j,
+                .state=STATES_NAMES[state]
+            };
+            sm2_item_bind(sm2, check_if_present, &item);
+
+            const int r = sqlite3_step(check_if_present);
+            if (r == SQLITE_ROW) {
+                // The item is already inserted, keep going
+            } else if (r == SQLITE_DONE) {
+                sm2_item_bind(sm2, insert_state, &item);
+                if (sqlite3_step(insert_state) != SQLITE_DONE) {
+                    log_sqlite_error_and_abort();
+                }
+            } else {
+                log_sqlite_error_and_abort();
+            }
         }
     }
-    sqlite3_finalize(stmt);
+    sqlite3_finalize(check_if_present);
+    sqlite3_finalize(insert_state);
 
     sm2_prepare_statement(sm2, &sm2->selector,
         "SELECT type, item, ef, reps FROM sm2"
@@ -135,13 +155,6 @@ sm2_item_t* sm2_next(sm2_t* sm2) {
     return out;
 }
 
-/*  Binds the two item parameters */
-static void sm2_item_bind(sm2_t* sm2, sqlite3_stmt* s, sm2_item_t* item) {
-    SQLITE_CHECKED(sqlite3_reset(s));
-    SQLITE_CHECKED(sqlite3_bind_int(s, 1, item->mode));
-    SQLITE_CHECKED(sqlite3_bind_text(s, 2, item->state, -1, SQLITE_STATIC));
-}
-
 void sm2_update(sm2_t* sm2, sm2_item_t* item, int q) {
     /*  Implements the SM2 algorithm described at
      *  https://www.supermemo.com/en/archives1990-2015/english/ol/sm2 */
@@ -181,6 +194,6 @@ void sm2_update(sm2_t* sm2, sm2_item_t* item, int q) {
 }
 
 void sm2_item_delete(sm2_item_t* item) {
-    free(item->state);
+    free((void*)item->state);
     free(item);
 }

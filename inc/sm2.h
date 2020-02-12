@@ -1,7 +1,7 @@
 #include "base.h"
 
 struct sm2_item_ {
-    char* state;
+    const char* state;
     enum { ITEM_MODE_NONE,
            ITEM_MODE_POSITION,
            ITEM_MODE_NAME,

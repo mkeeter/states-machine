@@ -16,6 +16,7 @@ out vec4 out_color;
 
 uniform sampler2D tex;
 uniform int active_state;
+uniform int wrong_state;
 
 vec3 color_hex(int c) {
     return vec3(((c >> 16) & 255) / 255.0f,
@@ -45,8 +46,10 @@ void main() {
     if (is_edge(t, ix, iy)) {
         out_color = vec4(color_hex(0x827717), 1.0f);
     } else if (t > 0.0f) {
-         if (t == active_state) {
+        if (t == active_state) {
             out_color = vec4(color_hex(0xF9FBE7), 1.0f);
+        } else if (t == wrong_state) {
+            out_color = vec4(color_hex(0xFFCDD2), 1.0f);
         } else {
             out_color = vec4(color_hex(0xF0F4C3), 1.0f);
         }
@@ -65,6 +68,7 @@ struct compositor_ {
     shader_t shader;
     GLint u_tex;
     GLint u_active_state;
+    GLint u_wrong_state;
 
     GLuint fbo;
     GLuint tex;
@@ -129,11 +133,13 @@ compositor_t* compositor_new(uint32_t width, uint32_t height) {
 
     {   /* Make a temporary struct to unpack local uniforms */
         GLint prog = compositor->shader.prog;
-        struct { GLint tex, active_state; } u;
+        struct { GLint tex, active_state, wrong_state; } u;
         SHADER_GET_UNIFORM(tex);
         SHADER_GET_UNIFORM(active_state);
+        SHADER_GET_UNIFORM(wrong_state);
         compositor->u_tex = u.tex;
         compositor->u_active_state = u.active_state;
+        compositor->u_wrong_state = u.wrong_state;
     }
 
     /* Build a single quad to draw the full-screen texture */
@@ -168,7 +174,8 @@ void compositor_bind(compositor_t* compositor) {
     glBindFramebuffer(GL_FRAMEBUFFER, compositor->fbo);
 }
 
-void compositor_draw(compositor_t* compositor, int active_state) {
+void compositor_draw(compositor_t* compositor, int active_state,
+                     int wrong_state) {
     glDisable(GL_DEPTH_TEST);
     glUseProgram(compositor->shader.prog);
 
@@ -178,6 +185,7 @@ void compositor_draw(compositor_t* compositor, int active_state) {
     glBindTexture(GL_TEXTURE_2D, compositor->tex);
     glUniform1i(compositor->u_tex, 0);
     glUniform1i(compositor->u_active_state, active_state);
+    glUniform1i(compositor->u_wrong_state, wrong_state);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }

@@ -11,7 +11,8 @@ void compositor_resize(compositor_t* compositor,
 void compositor_bind(compositor_t* compositor);
 
 /* Render the texture with edge detection and other fancy things */
-void compositor_draw(compositor_t* compositor, int active_state);
+void compositor_draw(compositor_t* compositor, int active_state,
+                     int wrong_state);
 
 /*  Returns the state at the given window pixel */
 int compositor_state_at(compositor_t* compositor, int x, int y);
