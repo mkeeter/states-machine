@@ -136,13 +136,13 @@ sm2_item_t* sm2_next(sm2_t* sm2) {
 }
 
 /*  Binds the two item parameters */
-static void sm2_item_bind(sm2_t* sm2, sqlite3_stmt* s, sm2_item_t item) {
+static void sm2_item_bind(sm2_t* sm2, sqlite3_stmt* s, sm2_item_t* item) {
     SQLITE_CHECKED(sqlite3_reset(s));
-    SQLITE_CHECKED(sqlite3_bind_int(s, 1, item.mode));
-    SQLITE_CHECKED(sqlite3_bind_text(s, 2, item.state, -1, SQLITE_STATIC));
+    SQLITE_CHECKED(sqlite3_bind_int(s, 1, item->mode));
+    SQLITE_CHECKED(sqlite3_bind_text(s, 2, item->state, -1, SQLITE_STATIC));
 }
 
-void sm2_update(sm2_t* sm2, sm2_item_t item, int q) {
+void sm2_update(sm2_t* sm2, sm2_item_t* item, int q) {
     /*  Implements the SM2 algorithm described at
      *  https://www.supermemo.com/en/archives1990-2015/english/ol/sm2 */
     if (q < 3) {
@@ -153,9 +153,10 @@ void sm2_update(sm2_t* sm2, sm2_item_t item, int q) {
         }
     } else {
         /* Update the EF for the given item */
-        item.ef = fmax(1.3, item.ef + 0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
+        item->ef = fmax(item->ef + 0.1 - (5 - q) * (0.08 + (5 - q) * 0.02),
+                        1.3);
         sm2_item_bind(sm2, sm2->correct, item);
-        SQLITE_CHECKED(sqlite3_bind_double(sm2->correct, 3, item.ef));
+        SQLITE_CHECKED(sqlite3_bind_double(sm2->correct, 3, item->ef));
         if (sqlite3_step(sm2->correct) != SQLITE_DONE) {
             log_sqlite_error_and_abort();
         }
@@ -169,8 +170,8 @@ void sm2_update(sm2_t* sm2, sm2_item_t item, int q) {
         }
     } else {
         /* Calculate next training time based on repetition count */
-        const float days = (item.reps <= 1)
-            ? 1 : (6 * pow(item.ef, item.reps - 2));
+        const float days = (item->reps <= 1)
+            ? 1 : (6 * pow(item->ef, item->reps - 2));
         sm2_item_bind(sm2, sm2->reschedule, item);
         SQLITE_CHECKED(sqlite3_bind_double(sm2->reschedule, 3, days));
         if (sqlite3_step(sm2->reschedule) != SQLITE_DONE) {

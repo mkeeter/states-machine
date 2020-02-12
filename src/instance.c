@@ -205,6 +205,22 @@ void instance_cb_char(instance_t* instance, unsigned codepoint)
         codepoint >= ' ' && codepoint < '~')
     {
         instance->buf[instance->buf_index++] = codepoint;
+    } else {
+        int q = -1;
+        if (instance->ui == UI_ANSWER_RIGHT &&
+            codepoint >= '4' && codepoint <= '6')
+        {
+            q = codepoint - '1';
+        } else if (instance->ui == UI_ANSWER_WRONG &&
+                   codepoint >= '1' && codepoint <= '3')
+        {
+            q = codepoint - '1';
+        }
+
+        if (q >= 0) {
+            sm2_update(instance->sm2, instance->active, q);
+            instance_next(instance);
+        }
     }
 }
 

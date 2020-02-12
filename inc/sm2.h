@@ -22,4 +22,4 @@ sm2_item_t* sm2_next(sm2_t* sm2);
 void sm2_item_delete(sm2_item_t* item);
 
 /*  Updates the given item with the quality score */
-void sm2_update(sm2_t* sm2, sm2_item_t item, int q);
+void sm2_update(sm2_t* sm2, sm2_item_t* item, int q);
