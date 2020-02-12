@@ -93,7 +93,7 @@ sm2_t* sm2_new() {
 
     sm2_prepare_statement(sm2, &sm2->selector,
         "SELECT type, item, ef, reps FROM sm2"
-        "    WHERE next IS NULL OR next >= strftime('%s', 'now')"
+        "    WHERE next IS NULL OR next <= strftime('%s', 'now')"
         "    ORDER BY RANDOM()"
         "    LIMIT 1");
     sm2_prepare_statement(sm2, &sm2->incorrect,
