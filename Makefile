@@ -2,12 +2,12 @@
 SRC :=                          \
 	src/camera                  \
 	src/compositor              \
-	src/console                 \
 	src/instance                \
 	src/log                     \
 	src/main                    \
 	src/map                     \
 	src/mat                     \
+	src/gui                     \
 	src/shader                  \
 	src/sm2                     \
 	src/version                 \

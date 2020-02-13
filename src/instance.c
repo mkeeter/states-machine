@@ -1,7 +1,7 @@
 #include "camera.h"
 #include "compositor.h"
-#include "console.h"
 #include "data.h"
+#include "gui.h"
 #include "instance.h"
 #include "log.h"
 #include "map.h"
@@ -25,7 +25,7 @@ instance_t* instance_new(void) {
     instance->camera = camera_new(width, height);
     instance->compositor = compositor_new(width, height);
     instance->map = map_new(instance->camera);
-    instance->console = console_new();
+    instance->gui = gui_new();
 
     size_t longest_name = 0;
     for (unsigned i=0; i < STATES_COUNT; ++i) {
@@ -62,9 +62,10 @@ instance_t* instance_new(void) {
 
 void instance_delete(instance_t* instance) {
     OBJECT_DELETE_MEMBER(instance, camera);
-    OBJECT_DELETE_MEMBER(instance, window);
     OBJECT_DELETE_MEMBER(instance, compositor);
+    OBJECT_DELETE_MEMBER(instance, gui);
     OBJECT_DELETE_MEMBER(instance, map);
+    OBJECT_DELETE_MEMBER(instance, window);
     sm2_item_delete(instance->active);
     free(instance);
 }
@@ -248,6 +249,7 @@ bool instance_draw(instance_t* instance) {
     glfwMakeContextCurrent(instance->window);
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearDepth(1.0f);
 
     // Draw to the compositor texture
     compositor_bind(instance->compositor);
@@ -255,7 +257,7 @@ bool instance_draw(instance_t* instance) {
     map_draw(instance->map, instance->camera);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     compositor_draw(instance->compositor, instance->active_state,
                     instance->wrong_state);
 
@@ -297,20 +299,23 @@ bool instance_draw(instance_t* instance) {
             break;
         }
     }
+    gui_reset(instance->gui);
+    gui_backdrop(instance->gui);
     if (instance->ui == UI_QUESTION) {
-        console_draw(instance->console, buf,
-                     camera_aspect_ratio(instance->camera), 0.7f);
+        gui_print(instance->gui, buf,
+                  camera_aspect_ratio(instance->camera), 0.7f);
     } else {
-        console_draw(instance->console, buf,
-                     camera_aspect_ratio(instance->camera), 0.8f);
+        gui_print(instance->gui, buf,
+                  camera_aspect_ratio(instance->camera), 0.8f);
         if (instance->ui == UI_ANSWER_RIGHT) {
-            console_draw(instance->console, "\x01Hard 1 2 3\x02 4 5 6 Easy",
-                         camera_aspect_ratio(instance->camera), 0.6f);
+            gui_print(instance->gui, "\x01Hard 1 2 3\x02 4 5 6 Easy",
+                      camera_aspect_ratio(instance->camera), 0.6f);
         } else {
-            console_draw(instance->console, "\x02Hard 1 2 3\x01 4 5 6 Easy",
-                         camera_aspect_ratio(instance->camera), 0.6f);
+            gui_print(instance->gui, "\x02Hard 1 2 3\x01 4 5 6 Easy",
+                      camera_aspect_ratio(instance->camera), 0.6f);
         }
     }
+    gui_draw(instance->gui);
 
     glfwSwapBuffers(instance->window);
     return needs_redraw;
