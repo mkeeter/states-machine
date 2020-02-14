@@ -104,7 +104,7 @@ sm2_t* sm2_new() {
         "UPDATE sm2 SET next = NULL WHERE type = ?1 AND item = ?2");
     sm2_prepare_statement(sm2, &sm2->reschedule,
         "UPDATE sm2"
-        "    SET next = strftime('%s', 'now') + ?3 * 86400.0"
+        "    SET next = strftime('%s', 'now') + ?3 * 86400.0 - 86400.0/2"
         "    WHERE type = ?1 AND item = ?2");
 
     return sm2;
