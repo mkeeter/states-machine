@@ -33,7 +33,7 @@ instance_t* instance_new(void) {
         if (len > longest_name) {
             log_trace("Found new longest name: %s", STATES_NAMES[i]);
             for (unsigned j=longest_name; j < len; ++j) {
-                instance->buf[j] = '_';
+                instance->buf[j] = ' ';
             }
             instance->buf[len] = 0;
             longest_name = len;
@@ -80,7 +80,7 @@ void instance_next(instance_t* instance) {
 
     // Reset the text buffer
     for (char* b = instance->buf; *b; ++b) {
-        *b = '_';
+        *b = ' ';
     }
     instance->buf_index = 0;
     instance->wrong_state = 0;
@@ -194,7 +194,7 @@ void instance_cb_key(instance_t* instance, int key, int scancode, int action, in
             (action == GLFW_PRESS || action == GLFW_REPEAT) &&
             instance->buf_index)
         {
-            instance->buf[--instance->buf_index] = '_';
+            instance->buf[--instance->buf_index] = ' ';
         }
         else if (key == GLFW_KEY_ENTER && action == GLFW_RELEASE)
         {
@@ -270,7 +270,7 @@ bool instance_draw(instance_t* instance) {
         case ITEM_MODE_NAME: {
             switch (instance->ui) {
                 case UI_QUESTION:
-                    snprintf(buf, sizeof(buf), "\x01This is \x02%s", instance->buf);
+                    snprintf(buf, sizeof(buf), "\x01This is \x02\x03%s", instance->buf);
                     break;
                 case UI_ANSWER_RIGHT:
                     snprintf(buf, sizeof(buf), "Correct!");
@@ -306,13 +306,13 @@ bool instance_draw(instance_t* instance) {
         gui_print(instance->gui, buf, aspect_ratio, 0.7f);
     } else {
         gui_print(instance->gui, buf,
-                  camera_aspect_ratio(instance->camera), 0.8f);
+                  camera_aspect_ratio(instance->camera), 0.77f);
         if (instance->ui == UI_ANSWER_RIGHT) {
             gui_print(instance->gui, "\x01Hard 1 2 3\x02 4 5 6 Easy",
-                      aspect_ratio, 0.6f);
+                      aspect_ratio, 0.63f);
         } else {
             gui_print(instance->gui, "\x02Hard 1 2 3\x01 4 5 6 Easy",
-                      aspect_ratio, 0.6f);
+                      aspect_ratio, 0.63f);
         }
     }
     gui_draw(instance->gui);

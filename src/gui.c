@@ -182,7 +182,7 @@ void gui_backdrop(gui_t* gui, float aspect_ratio) {
     q.x0 = -0.8;
     q.x1 = 0.8;
     q.y0 = 0.55;
-    q.y1 = 0.95;
+    q.y1 = 0.90;
 
     const float z = 0.75f;
     gui_push_quad(gui, q, z, -1.0f);
@@ -261,11 +261,16 @@ void gui_print(gui_t* gui, const char* s,
 
     // Record the starting index
     unsigned j = gui->buf_index;
+    float underline_x = -5.0f;
+    float underline_y = -5.0f;
     while (*s) {
         if (*s == 1) {
             shade = 0.5f;
         } else if (*s == 2) {
             shade = 1.0f;
+        } else if (*s == 3) {
+            underline_x = x;
+            underline_y = y;
         } else {
             stbtt_aligned_quad q;
             stbtt_GetPackedQuad(
@@ -274,6 +279,15 @@ void gui_print(gui_t* gui, const char* s,
             gui_push_quad(gui, q, 0.5f, shade);
         }
         ++s;
+    }
+
+    if (underline_x != -5.0f) {
+        stbtt_aligned_quad q;
+        q.x0 = underline_x;
+        q.x1 = x;
+        q.y0 = underline_y + FONT_SIZE_PX * 0.3;
+        q.y1 = underline_y + FONT_SIZE_PX * 0.25;
+        gui_push_quad(gui, q, 0.5f, -3.0f);
     }
 
     x /= 2.0f;  // Prepare to center the text
