@@ -43,18 +43,24 @@ void main() {
     int iy = int(gl_FragCoord.y + 0.5f);
     float t = texelFetch(tex, ivec2(ix, iy), 0).r;
 
-    if (is_edge(t, ix, iy)) {
-        out_color = vec4(color_hex(0x827717), 1.0f);
+    bool e = is_edge(t, ix, iy);
+    if (e) {
+        /* State-state edge */
+        out_color = vec4(color_hex(0x2E7D32), 1.0f);
     } else if (t > 0.0f) {
         if (t == active_state) {
-            out_color = vec4(color_hex(0xF9FBE7), 1.0f);
+            /* Active state (brighter) */
+            out_color = vec4(color_hex(0xFFB74D), 1.0f);
         } else if (t == wrong_state) {
-            out_color = vec4(color_hex(0xFFCDD2), 1.0f);
+            /* Incorrect state (red) */
+            out_color = vec4(color_hex(0xE57373), 1.0f);
         } else {
-            out_color = vec4(color_hex(0xF0F4C3), 1.0f);
+            /*  Normal state */
+            out_color = vec4(color_hex(0x9CCC65), 1.0f);
         }
     } else {
-        out_color = vec4(color_hex(0xE1F5FE), 1.0f);
+        /* Ocean */
+        out_color = vec4(color_hex(0x303F9F), 1.0f);
     }
 }
 );

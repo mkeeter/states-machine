@@ -14,6 +14,9 @@ int main(int argc, char** argv) {
     /* Platform-specific initialization */
     platform_init(argc, argv);
 
+    /*  Avoid tearing */
+    glfwSwapInterval(1);
+
     while (instance) {
         if (glfwWindowShouldClose(instance->window)) {
             instance_delete(instance);
