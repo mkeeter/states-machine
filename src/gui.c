@@ -39,7 +39,7 @@ void main() {
         out_color = vec4(white + delta * t, 1.0f);
     } else if (frag_shade == -1.0f) {
         out_color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    } else if (frag_shade <= -2.0f) {
+    } else if (frag_shade <= -1.99f) {
         out_color = vec4(0.0f, 0.0f, 0.0f, -2.0f - frag_shade);
     } else {
         out_color = vec4(1.0f, 0.0f, 0.0f, 1.0f);
@@ -177,7 +177,7 @@ void gui_reset(gui_t* gui) {
     gui->buf_index = 0;
 }
 
-void gui_backdrop(gui_t* gui) {
+void gui_backdrop(gui_t* gui, float aspect_ratio) {
     stbtt_aligned_quad q;
     q.x0 = -0.8;
     q.x1 = 0.8;
@@ -188,42 +188,68 @@ void gui_backdrop(gui_t* gui) {
     gui_push_quad(gui, q, z, -1.0f);
 
     // Drop shadow!
+    const float ry = 0.02f;
+    const float rx = ry / aspect_ratio;
 
     // Left side
-    gui_push_vert(gui, q.x0 - 0.05f, q.y0, z, 0.0f, 0.0f, -2.0f);
+    gui_push_vert(gui, q.x0 - rx, q.y0, z, 0.0f, 0.0f, -2.0f);
     gui_push_vert(gui, q.x0, q.y0, z, 0.0f, 0.0f, -2.2f);
     gui_push_vert(gui, q.x0, q.y1, z, 0.0f, 0.0f, -2.2f);
 
-    gui_push_vert(gui, q.x0 - 0.05f, q.y0, z, 0.0f, 0.0f, -2.0f);
+    gui_push_vert(gui, q.x0 - rx, q.y0, z, 0.0f, 0.0f, -2.0f);
     gui_push_vert(gui, q.x0, q.y1, z, 0.0f, 0.0f, -2.2f);
-    gui_push_vert(gui, q.x0 - 0.05f, q.y1, z, 0.0f, 0.0f, -2.0f);
+    gui_push_vert(gui, q.x0 - rx, q.y1, z, 0.0f, 0.0f, -2.0f);
 
     // Right side
-    gui_push_vert(gui, q.x1 + 0.05f, q.y0, z, 0.0f, 0.0f, -2.0f);
+    gui_push_vert(gui, q.x1 + rx, q.y0, z, 0.0f, 0.0f, -2.0f);
     gui_push_vert(gui, q.x1, q.y0, z, 0.0f, 0.0f, -2.2f);
     gui_push_vert(gui, q.x1, q.y1, z, 0.0f, 0.0f, -2.2f);
 
-    gui_push_vert(gui, q.x1 + 0.05f, q.y0, z, 0.0f, 0.0f, -2.0f);
+    gui_push_vert(gui, q.x1 + rx, q.y0, z, 0.0f, 0.0f, -2.0f);
     gui_push_vert(gui, q.x1, q.y1, z, 0.0f, 0.0f, -2.2f);
-    gui_push_vert(gui, q.x1 + 0.05f, q.y1, z, 0.0f, 0.0f, -2.0f);
+    gui_push_vert(gui, q.x1 + rx, q.y1, z, 0.0f, 0.0f, -2.0f);
 
     // Bottom side
-    gui_push_vert(gui, q.x0, q.y0, z, 0.0f, 0.0f, -2.0f);
-    gui_push_vert(gui, q.x1, q.y0, z, 0.0f, 0.0f, -2.0f);
-    gui_push_vert(gui, q.x1, q.y0 - 0.05f, z, 0.0f, 0.0f, -2.2f);
+    gui_push_vert(gui, q.x0, q.y0, z, 0.0f, 0.0f, -2.2f);
+    gui_push_vert(gui, q.x1, q.y0, z, 0.0f, 0.0f, -2.2f);
+    gui_push_vert(gui, q.x1, q.y0 - ry, z, 0.0f, 0.0f, -2.0f);
 
-    gui_push_vert(gui, q.x0, q.y0, z, 0.0f, 0.0f, -2.0f);
-    gui_push_vert(gui, q.x1, q.y0 - 0.05f, z, 0.0f, 0.0f, -2.2f);
-    gui_push_vert(gui, q.x0, q.y0 - 0.05f, z, 0.0f, 0.0f, -2.2f);
+    gui_push_vert(gui, q.x0, q.y0, z, 0.0f, 0.0f, -2.2f);
+    gui_push_vert(gui, q.x1, q.y0 - ry, z, 0.0f, 0.0f, -2.0f);
+    gui_push_vert(gui, q.x0, q.y0 - ry, z, 0.0f, 0.0f, -2.0f);
 
     // Top side
     gui_push_vert(gui, q.x0, q.y1, z, 0.0f, 0.0f, -2.2f);
     gui_push_vert(gui, q.x1, q.y1, z, 0.0f, 0.0f, -2.2f);
-    gui_push_vert(gui, q.x1, q.y1 + 0.05f, z, 0.0f, 0.0f, -2.0f);
+    gui_push_vert(gui, q.x1, q.y1 + ry, z, 0.0f, 0.0f, -2.0f);
 
     gui_push_vert(gui, q.x0, q.y1, z, 0.0f, 0.0f, -2.2f);
-    gui_push_vert(gui, q.x1, q.y1 + 0.05f, z, 0.0f, 0.0f, -2.0f);
-    gui_push_vert(gui, q.x0, q.y1 + 0.05f, z, 0.0f, 0.0f, -2.0f);
+    gui_push_vert(gui, q.x1, q.y1 + ry, z, 0.0f, 0.0f, -2.0f);
+    gui_push_vert(gui, q.x0, q.y1 + ry, z, 0.0f, 0.0f, -2.0f);
+
+    const float corners[4][4] = {
+        {q.x0, q.y0, -1, -1},
+        {q.x1, q.y0,  1, -1},
+        {q.x0, q.y1, -1,  1},
+        {q.x1, q.y1,  1,  1},
+    };
+    for (unsigned j=0; j < 4; ++j) {
+        const float cx = corners[j][0];
+        const float cy = corners[j][1];
+        const float sx = corners[j][2];
+        const float sy = corners[j][3];
+        for (unsigned i=0; i < 16; ++i) {
+            const float ra = i / 16.0f * M_PI / 2.0f;
+            const float rb = (i + 1) / 16.0f * M_PI / 2.0f;
+                gui_push_vert(gui, cx, cy, z, 0, 0, -2.2);
+                gui_push_vert(gui, cx + sx * cos(ra) * rx,
+                              cy + sy * sin(ra) * ry,
+                              z, 0, 0, -2);
+                gui_push_vert(gui, cx + sx * cos(rb) * rx,
+                              cy + sy * sin(rb) * ry,
+                              z, 0, 0, -2);
+        }
+    }
 }
 
 void gui_print(gui_t* gui, const char* s,

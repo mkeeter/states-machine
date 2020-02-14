@@ -300,19 +300,19 @@ bool instance_draw(instance_t* instance) {
         }
     }
     gui_reset(instance->gui);
-    gui_backdrop(instance->gui);
+    const float aspect_ratio = camera_aspect_ratio(instance->camera);
+    gui_backdrop(instance->gui, aspect_ratio);
     if (instance->ui == UI_QUESTION) {
-        gui_print(instance->gui, buf,
-                  camera_aspect_ratio(instance->camera), 0.7f);
+        gui_print(instance->gui, buf, aspect_ratio, 0.7f);
     } else {
         gui_print(instance->gui, buf,
                   camera_aspect_ratio(instance->camera), 0.8f);
         if (instance->ui == UI_ANSWER_RIGHT) {
             gui_print(instance->gui, "\x01Hard 1 2 3\x02 4 5 6 Easy",
-                      camera_aspect_ratio(instance->camera), 0.6f);
+                      aspect_ratio, 0.6f);
         } else {
             gui_print(instance->gui, "\x02Hard 1 2 3\x01 4 5 6 Easy",
-                      camera_aspect_ratio(instance->camera), 0.6f);
+                      aspect_ratio, 0.6f);
         }
     }
     gui_draw(instance->gui);
