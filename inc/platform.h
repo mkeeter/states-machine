@@ -52,9 +52,6 @@ int platform_thread_join(platform_thread_t* thread);
 void platform_init(int argc, char** argv);
 void platform_window_bind(GLFWwindow* window);
 
-/*  Shows a warning dialog with the given text */
-void platform_warning(const char* title, const char* text);
-
 /*  Returns the filename portion of a full path */
 const char* platform_filename(const char* filepath);
 const char* platform_get_user_file(const char* file);

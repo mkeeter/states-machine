@@ -86,14 +86,6 @@ extern "C" void platform_init(int argc, char** argv)
     aboutItem.target = GLUE;
 }
 
-extern "C" void platform_warning(const char* title, const char* text) {
-    NSAlert *alert = [[NSAlert alloc] init];
-    [alert setMessageText:[NSString stringWithUTF8String:title]];
-    [alert setInformativeText:[NSString stringWithUTF8String:text]];
-    [alert addButtonWithTitle:@"Okay"];
-    [alert runModal];
-}
-
 extern "C" const char* platform_get_user_file(const char* file)
 {
     NSURL* url = [NSFileManager.defaultManager
