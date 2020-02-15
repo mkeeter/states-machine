@@ -79,7 +79,7 @@ void instance_next(instance_t* instance) {
     instance->ui = UI_QUESTION;
 
     // Reset the text buffer
-    instance->input[0] = 0;
+    memset(instance->input, 0, sizeof(instance->input));
     instance->input_index = 0;
     instance->wrong_state = 0;
 
