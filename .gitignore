@@ -5,3 +5,4 @@ states-machine
 src/version.c
 inc/log_align.h
 sm.sqlite
+States Machine.app

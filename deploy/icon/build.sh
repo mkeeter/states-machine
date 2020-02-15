@@ -9,10 +9,10 @@ convert icon512.png -resize 32x32 icon032.png
 convert icon512.png -resize 16x16 icon016.png
 
 # Build the Mac icon
-png2icns ../darwin/erizo.icns icon*.png
+png2icns ../darwin/StatesMachine.icns icon*.png
 
 # Build the Windows icon
-convert icon*.png ../win64/erizo.ico
+convert icon*.png ../win32/StatesMachine.ico
 
 # Clean up
 rm icon512.png icon256.png icon128.png icon032.png icon016.png
