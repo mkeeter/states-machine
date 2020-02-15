@@ -252,6 +252,34 @@ void gui_backdrop(gui_t* gui, float aspect_ratio) {
     }
 }
 
+void gui_draw_squircle(gui_t* gui, float x, float y, float z,
+                       float s, float r, float a)
+{
+#define SQUIRCLE_VERTS 64
+    float angle[SQUIRCLE_VERTS];
+    float rho[SQUIRCLE_VERTS];
+    for (unsigned i=0; i < SQUIRCLE_VERTS; ++i) {
+        const float theta = i / (float)SQUIRCLE_VERTS * 2 * M_PI;
+        angle[i] = theta;
+        rho[i] = fabsf(r * sqrtf(2.0f) / (s * sinf(2 * theta)) *
+            sqrtf(1 - sqrtf(1 - powf(s * sinf(2 * theta), 2))));
+        if (!(rho[i] > r / 2.0f)) {
+            rho[i] = r;
+        }
+    }
+    for (unsigned i=0; i < SQUIRCLE_VERTS; ++i) {
+        gui_push_vert(gui, x, y, z, 0, 0, a);
+        gui_push_vert(gui, x + cos(angle[i]) * rho[i],
+                           y + sin(angle[i]) * rho[i],
+                      z, 0, 0, a);
+        const unsigned j = (i + 1) % SQUIRCLE_VERTS;
+        gui_push_vert(gui, x + cos(angle[j]) * rho[j],
+                           y + sin(angle[j]) * rho[j],
+                      z, 0, 0, a);
+    }
+#undef SQUIRCLE_VERTS
+}
+
 void gui_print(gui_t* gui, const char* s,
                float aspect_ratio, float y_pos,
                int pad_to)
@@ -264,7 +292,8 @@ void gui_print(gui_t* gui, const char* s,
     unsigned j = gui->buf_index;
     float underline_x = -5.0f;
     float underline_y = -5.0f;
-    int underlined = -1;
+    int underlined_count = -1;
+    bool draw_squircle = false;
     while (*s) {
         if (*s == 1) {
             shade = 0.5f;
@@ -274,7 +303,7 @@ void gui_print(gui_t* gui, const char* s,
             // Begin underline
             underline_x = x;
             underline_y = y;
-            underlined = 0;
+            underlined_count = 0;
         } else if (*s == 4) {
             // Add cursor line
             stbtt_aligned_quad q;
@@ -285,21 +314,31 @@ void gui_print(gui_t* gui, const char* s,
             gui_push_quad(gui, q, 0.5f, -2.5f);
 
             // End underline, pad based on number of characters
-            while (underlined++ <= pad_to) {
+            while (underlined_count++ <= pad_to) {
                 stbtt_aligned_quad q;
                 stbtt_GetPackedQuad(
                         gui->chars, FONT_IMAGE_SIZE, FONT_IMAGE_SIZE,
                         0, &x, &y, &q, 0);
                 gui_push_quad(gui, q, 0.5f, shade);
             }
+        } else if (*s == 5) {
+            draw_squircle = true;
+        } else if (*s == 6) {
+            shade = 0.2f;
         } else {
             stbtt_aligned_quad q;
             stbtt_GetPackedQuad(
                     gui->chars, FONT_IMAGE_SIZE, FONT_IMAGE_SIZE,
                     *s - ' ', &x, &y, &q, 0);
             gui_push_quad(gui, q, 0.5f, shade);
-            if (underlined >= 0) {
-                underlined++;
+            if (underlined_count >= 0) {
+                underlined_count++;
+            }
+            if (draw_squircle) {
+                const float rx = (q.x0 + q.x1) / 2.0f;
+                const float ry = (q.y0 + q.y1) / 2.0f;
+                gui_draw_squircle(gui, rx, ry, 0.1f, 0.95f, FONT_SIZE_PX / 2.0f, -2.0f - shade / 4.0f);
+                draw_squircle = false;
             }
         }
         ++s;

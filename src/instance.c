@@ -307,10 +307,10 @@ bool instance_draw(instance_t* instance) {
         gui_print(instance->gui, buf,
                   camera_aspect_ratio(instance->camera), 0.77f, 0);
         if (instance->ui == UI_ANSWER_RIGHT) {
-            gui_print(instance->gui, "\x01Hard 1 2 3\x02 4 5 6 Easy",
+            gui_print(instance->gui, "\x06Hard  \x05""1  \x05""2  \x05""3\x02  \x05""4  \x05""5  \x05""6  Easy",
                       aspect_ratio, 0.63f, 0);
         } else {
-            gui_print(instance->gui, "\x02Hard 1 2 3\x01 4 5 6 Easy",
+            gui_print(instance->gui, "\x02Hard  \x05""1  \x05""2  \x05""3\x06  \x05""4  \x05""5  \x05""6  Easy",
                       aspect_ratio, 0.63f, 0);
         }
     }
