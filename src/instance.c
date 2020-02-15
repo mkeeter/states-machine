@@ -185,7 +185,8 @@ void instance_cb_mouse_scroll(instance_t* instance,
     camera_zoom(instance->camera, yoffset);
 }
 
-void instance_cb_key(instance_t* instance, int key, int scancode, int action, int mods)
+void instance_cb_key(instance_t* instance, int key, int scancode,
+                     int action, int mods)
 {
     if (instance->active->mode == ITEM_MODE_NAME) {
         if (key == GLFW_KEY_BACKSPACE &&
@@ -292,7 +293,7 @@ bool instance_draw(instance_t* instance) {
                     break;
                 case UI_ANSWER_WRONG:
                     snprintf(buf, sizeof(buf), "\x01No, that is \x02%s",
-                            STATES_NAMES[instance->wrong_state - 1]);
+                             STATES_NAMES[instance->wrong_state - 1]);
                     break;
             }
             break;
@@ -307,10 +308,14 @@ bool instance_draw(instance_t* instance) {
         gui_print(instance->gui, buf,
                   camera_aspect_ratio(instance->camera), 0.77f, 0);
         if (instance->ui == UI_ANSWER_RIGHT) {
-            gui_print(instance->gui, "\x06Hard  \x05""1  \x05""2  \x05""3\x02  \x05""4  \x05""5  \x05""6  Easy",
+            gui_print(instance->gui,
+                      "\x06Hard  \x05""1  \x05""2  \x05"
+                      "3\x02  \x05""4  \x05""5  \x05""6  Easy",
                       aspect_ratio, 0.63f, 0);
         } else {
-            gui_print(instance->gui, "\x02Hard  \x05""1  \x05""2  \x05""3\x06  \x05""4  \x05""5  \x05""6  Easy",
+            gui_print(instance->gui,
+                      "\x02Hard  \x05""1  \x05""2  \x05"
+                      "3\x06  \x05""4  \x05""5  \x05""6  Easy",
                       aspect_ratio, 0.63f, 0);
         }
     }
