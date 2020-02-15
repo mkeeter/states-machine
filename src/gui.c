@@ -253,7 +253,8 @@ void gui_backdrop(gui_t* gui, float aspect_ratio) {
 }
 
 void gui_print(gui_t* gui, const char* s,
-               float aspect_ratio, float y_pos)
+               float aspect_ratio, float y_pos,
+               int pad_to)
 {
     float x = 0.0f;
     float y = 0.0f;
@@ -263,20 +264,43 @@ void gui_print(gui_t* gui, const char* s,
     unsigned j = gui->buf_index;
     float underline_x = -5.0f;
     float underline_y = -5.0f;
+    int underlined = -1;
     while (*s) {
         if (*s == 1) {
             shade = 0.5f;
         } else if (*s == 2) {
             shade = 1.0f;
         } else if (*s == 3) {
+            // Begin underline
             underline_x = x;
             underline_y = y;
+            underlined = 0;
+        } else if (*s == 4) {
+            // Add cursor line
+            stbtt_aligned_quad q;
+            q.x0 = x + FONT_SIZE_PX * 0.05f;
+            q.x1 = x + FONT_SIZE_PX * 0.1f;
+            q.y0 = underline_y + FONT_SIZE_PX * 0.1f;
+            q.y1 = underline_y - FONT_SIZE_PX * 0.7f;
+            gui_push_quad(gui, q, 0.5f, -2.5f);
+
+            // End underline, pad based on number of characters
+            while (underlined++ <= pad_to) {
+                stbtt_aligned_quad q;
+                stbtt_GetPackedQuad(
+                        gui->chars, FONT_IMAGE_SIZE, FONT_IMAGE_SIZE,
+                        0, &x, &y, &q, 0);
+                gui_push_quad(gui, q, 0.5f, shade);
+            }
         } else {
             stbtt_aligned_quad q;
             stbtt_GetPackedQuad(
                     gui->chars, FONT_IMAGE_SIZE, FONT_IMAGE_SIZE,
                     *s - ' ', &x, &y, &q, 0);
             gui_push_quad(gui, q, 0.5f, shade);
+            if (underlined >= 0) {
+                underlined++;
+            }
         }
         ++s;
     }

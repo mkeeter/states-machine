@@ -27,18 +27,18 @@ instance_t* instance_new(void) {
     instance->map = map_new(instance->camera);
     instance->gui = gui_new();
 
-    size_t longest_name = 0;
+    /*  Find the longest state name and store it as input_size */
+    memset(instance->input, 0, sizeof(instance->input));
+    instance->input_index = 0;
+    instance->input_size = 0;
     for (unsigned i=0; i < STATES_COUNT; ++i) {
-        size_t len = strlen(STATES_NAMES[i]);
-        if (len > longest_name) {
-            log_trace("Found new longest name: %s", STATES_NAMES[i]);
-            for (unsigned j=longest_name; j < len; ++j) {
-                instance->buf[j] = ' ';
-            }
-            instance->buf[len] = 0;
-            longest_name = len;
+        const size_t len = strlen(STATES_NAMES[i]);
+        if (len > instance->input_size) {
+            instance->input_size = len;
         }
     }
+
+    /*  Load the next item to learn */
     instance->sm2 = sm2_new();
     instance_next(instance);
 
@@ -79,10 +79,8 @@ void instance_next(instance_t* instance) {
     instance->ui = UI_QUESTION;
 
     // Reset the text buffer
-    for (char* b = instance->buf; *b; ++b) {
-        *b = ' ';
-    }
-    instance->buf_index = 0;
+    instance->input[0] = 0;
+    instance->input_index = 0;
     instance->wrong_state = 0;
 
     if (instance->active->mode == ITEM_MODE_NAME) {
@@ -192,21 +190,21 @@ void instance_cb_key(instance_t* instance, int key, int scancode, int action, in
     if (instance->active->mode == ITEM_MODE_NAME) {
         if (key == GLFW_KEY_BACKSPACE &&
             (action == GLFW_PRESS || action == GLFW_REPEAT) &&
-            instance->buf_index)
+            instance->input_index)
         {
-            instance->buf[--instance->buf_index] = ' ';
+            instance->input[--instance->input_index] = 0;
         }
         else if (key == GLFW_KEY_ENTER && action == GLFW_RELEASE)
         {
-            if (!strncmp(instance->buf, instance->active->state,
-                         instance->buf_index - 1))
+            if (!strncmp(instance->input, instance->active->state,
+                         instance->input_index - 1))
             {
                 instance->ui = UI_ANSWER_RIGHT;
             } else {
                 instance->wrong_state = 0;
                 for (unsigned i=0; i < STATES_COUNT; ++i) {
-                    if (!strncmp(instance->buf, STATES_NAMES[i],
-                                 instance->buf_index - 1)) {
+                    if (!strncmp(instance->input, STATES_NAMES[i],
+                                 instance->input_index - 1)) {
                         instance->wrong_state = i + 1;
                     }
                 }
@@ -220,10 +218,10 @@ void instance_cb_char(instance_t* instance, unsigned codepoint)
 {
     if (instance->active->mode == ITEM_MODE_NAME &&
         instance->ui == UI_QUESTION &&
-        instance->buf[instance->buf_index] &&
+        instance->input_index <= instance->input_size &&
         codepoint >= ' ' && codepoint < '~')
     {
-        instance->buf[instance->buf_index++] = codepoint;
+        instance->input[instance->input_index++] = codepoint;
     } else {
         int q = -1;
         if (instance->ui == UI_ANSWER_RIGHT &&
@@ -270,7 +268,8 @@ bool instance_draw(instance_t* instance) {
         case ITEM_MODE_NAME: {
             switch (instance->ui) {
                 case UI_QUESTION:
-                    snprintf(buf, sizeof(buf), "\x01This is \x02\x03%s", instance->buf);
+                    snprintf(buf, sizeof(buf), "\x01This is \x02\x03%s\x04",
+                             instance->input);
                     break;
                 case UI_ANSWER_RIGHT:
                     snprintf(buf, sizeof(buf), "Correct!");
@@ -303,16 +302,16 @@ bool instance_draw(instance_t* instance) {
     const float aspect_ratio = camera_aspect_ratio(instance->camera);
     gui_backdrop(instance->gui, aspect_ratio);
     if (instance->ui == UI_QUESTION) {
-        gui_print(instance->gui, buf, aspect_ratio, 0.7f);
+        gui_print(instance->gui, buf, aspect_ratio, 0.7f, instance->input_size);
     } else {
         gui_print(instance->gui, buf,
-                  camera_aspect_ratio(instance->camera), 0.77f);
+                  camera_aspect_ratio(instance->camera), 0.77f, 0);
         if (instance->ui == UI_ANSWER_RIGHT) {
             gui_print(instance->gui, "\x01Hard 1 2 3\x02 4 5 6 Easy",
-                      aspect_ratio, 0.63f);
+                      aspect_ratio, 0.63f, 0);
         } else {
             gui_print(instance->gui, "\x02Hard 1 2 3\x01 4 5 6 Easy",
-                      aspect_ratio, 0.63f);
+                      aspect_ratio, 0.63f, 0);
         }
     }
     gui_draw(instance->gui);

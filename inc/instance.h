@@ -20,8 +20,9 @@ typedef struct instance_ {
     struct sm2_item_* active;
 
     /*  Text buffer to type in the state name */
-    char buf[32];
-    unsigned buf_index;
+    char input[32];
+    unsigned input_index;
+    unsigned input_size;
 
     /*  Current state of the UI */
     enum { UI_QUESTION, UI_ANSWER_RIGHT, UI_ANSWER_WRONG } ui;
