@@ -1,6 +1,7 @@
 #include "data.h"
 #include "log.h"
 #include "object.h"
+#include "platform.h"
 #include "sm2.h"
 
 #define SQLITE_CHECKED(cond) do {       \
@@ -47,7 +48,8 @@ static void sm2_item_bind(sm2_t* sm2, sqlite3_stmt* s, sm2_item_t* item) {
 sm2_t* sm2_new() {
     OBJECT_ALLOC(sm2);
 
-    SQLITE_CHECKED(sqlite3_open("sm.sqlite", &sm2->db));
+    const char* p = platform_get_user_file("sm.sqlite");
+    SQLITE_CHECKED(sqlite3_open(p, &sm2->db));
 
     char* err_msg;
     SQLITE_CHECKED(sqlite3_exec(sm2->db, "CREATE TABLE IF NOT EXISTS sm2 ("

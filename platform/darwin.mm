@@ -93,3 +93,27 @@ extern "C" void platform_warning(const char* title, const char* text) {
     [alert addButtonWithTitle:@"Okay"];
     [alert runModal];
 }
+
+extern "C" const char* platform_get_user_file(const char* file)
+{
+    NSURL* url = [NSFileManager.defaultManager
+        URLForDirectory:NSApplicationSupportDirectory
+        inDomain:NSUserDomainMask
+        appropriateForURL:nil
+        create:YES
+        error:nil];
+    if (url) {
+        NSString* bundle_id = @"StatesMachine";
+        NSURL* folder = [url URLByAppendingPathComponent:bundle_id];
+        NSURL* path = [folder URLByAppendingPathComponent:
+            [NSString stringWithUTF8String:file]];
+        [NSFileManager.defaultManager
+            createDirectoryAtPath:[folder path]
+            withIntermediateDirectories:YES
+            attributes:nil
+            error:nil];
+        return [[path path] cStringUsingEncoding:NSUTF8StringEncoding];
+    } else {
+        return NULL;
+    }
+}
