@@ -5,7 +5,7 @@ EXE="StatesMachine"
 APP="States Machine.app"
 
 cd ../..
-#make clean
+make clean
 make -j8
 strip states-machine
 
@@ -39,4 +39,4 @@ then
     rm -rf dmg
 fi
 
-#make clean
+make clean
