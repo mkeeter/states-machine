@@ -53,7 +53,7 @@ else:
     triangles = {}
     for (i,d) in enumerate(r.records()):
         shape = r.shape(i)
-        parts = list(shape.parts) + [-1]
+        parts = list(shape.parts) + [0]
         points = shape.points
         tris = []
         for (a,b) in zip(parts, parts[1:]):
