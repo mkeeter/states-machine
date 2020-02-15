@@ -33,17 +33,22 @@ else:
         sc = point_line_sign(pt, tri[2,:], tri[0,:])
         return sa == sb and sb == sc and sa == sc
 
+    def triangle_sign(tri):
+        return np.cross(tri[0,:] - tri[1,:], tri[2,:] - tri[1,:]) > 0
+
     def triangulate(pts):
         triangles = []
         while pts.shape[0] > 3:
             n = pts.shape[0]
             for v in range(0, n):
                 tri = pts[[v - 1, v, (v + 1) % n], :]
-                contains_vertex = False
+                if not triangle_sign(tri):
+                    continue
+
                 for u in range(0, n):
-                    if abs(u - v) > 1:
-                        contains_vertex |= point_in_triangle(pts[u,:], tri)
-                if not contains_vertex:
+                    if abs(u - v) > 1 and point_in_triangle(pts[u,:], tri):
+                        break
+                else:
                     triangles.append(tri)
                     pts = np.delete(pts, v, 0)
                     break
