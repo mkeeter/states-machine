@@ -69,7 +69,6 @@ else:
     ts = {k:[q.tolist() for q in v] for (k,v) in triangles.items()}
     json.dump(ts, open('triangles.json','w'), indent=2)
 
-
 # Convert each set of triangles into an indexed representation
 indexed = {}
 offset = 0
