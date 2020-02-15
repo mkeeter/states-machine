@@ -133,7 +133,7 @@ ifneq ($(MAKECMDGOALS),clean)
 $(BUILD_DIR)/%.d: %.c | $(BUILD_SUBDIRS) $(GEN)
 	$(CC) $< $(PLATFORM) $(CFLAGS) -MM -MT $(@:.d=.o) > $@
 $(BUILD_DIR)/%.d: %.mm | $(BUILD_SUBDIRS) $(GEN)
-	$(CC) $< $(PLATFORM) -Iinc -MM -MT $(@:.d=.o) > $@
+	$(CC) $< $(PLATFORM) -Iinc -Ivendor -MM -MT $(@:.d=.o) > $@
 endif
 
 $(BUILD_SUBDIRS):
