@@ -16,6 +16,7 @@ using [spaced repetition](https://en.wikipedia.org/wiki/Spaced_repetition).
   - OpenGL loading: [GLEW](http://glew.sourceforge.net/)
   - Font rendering: [stb_truetype.h](https://github.com/nothings/stb/blob/master/stb_truetype.h)
 - Uses an [SQLite](https://www.sqlite.org/index.html) database to store progress
+- Implements the [SM2 algorithm](https://www.supermemo.com/en/archives1990-2015/english/ol/sm2) to plan repetitions
 - Written almost entirely in austere C
 
 # Platforms
@@ -23,6 +24,7 @@ Setting expectations up front,
 **States Machine** is mostly for me,
 so I won't be making any major effort to make it
 run on machines other than my own.
+
 If you'd like to run it on (hypothetically speaking)
 Arch Linux or OpenBSD,
 you're entirely welcome,
