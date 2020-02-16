@@ -5,14 +5,17 @@ using [spaced repetition](https://en.wikipedia.org/wiki/Spaced_repetition).
 ![Example](example.png)
 
 ## Aesthetics
-- Smooth vector graphics, using real US Census Bureau shapefiles
-- UI inspired by Material Design
+- Smooth vector graphics, using real [US Census Bureau shapefiles](https://www.census.gov/geographies/mapping-files/time-series/geo/carto-boundary-file.html)
+- UI inspired by [Material Design](https://material.io/design/), using [Inconsolata](https://fonts.google.com/specimen/Inconsolata) for text
 - Starts up in less than one second
 - Deployed as a single static binary, about 1.1 MB zipped
 
 ## Foundations
-- Targets OpenGL 3.3 for graphics
-- Uses an SQLite database to store progress
+- Uses OpenGL 3.3 for graphics
+  - Windowing: [GLFW](https://www.glfw.org/)
+  - OpenGL loading: [GLEW](http://glew.sourceforge.net/)
+  - Font rendering: [stb_truetype.h](https://github.com/nothings/stb/blob/master/stb_truetype.h)
+- Uses an [SQLite](https://www.sqlite.org/index.html) database to store progress
 - Written almost entirely in austere C
 
 # Platforms
