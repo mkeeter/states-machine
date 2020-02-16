@@ -1,7 +1,14 @@
 #define _WIN32_WINNT _WIN32_WINNT_WIN7
 #include <windows.h>
+#include <shlwapi.h>
 
-#include "app.h"
+// Used for SHGetKnownFolderPath
+#include <Shlobj.h>
+
+// Mystery includes, necessary to get FOLDERID_RoamingAppData linked
+#include <initguid.h>
+#include <knownfolders.h>
+
 #include "instance.h"
 #include "log.h"
 #include "object.h"
@@ -10,55 +17,6 @@
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
-
-struct platform_mmap_ {
-    const char* data;
-    HANDLE file;
-    HANDLE map;
-    size_t size;
-};
-
-platform_mmap_t* platform_mmap(const char* filename) {
-    HANDLE file = CreateFile(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (file == INVALID_HANDLE_VALUE) {
-        log_error("Could not open file (%lu)", GetLastError());
-        return NULL;
-    }
-    LARGE_INTEGER size;
-    if (!GetFileSizeEx(file, &size)) {
-        log_error("Could not get file size (%lu)", GetLastError());
-        CloseHandle(file);
-        return NULL;
-    }
-
-    HANDLE map = CreateFileMappingA(file, NULL, PAGE_EXECUTE_READ, 0, 0, NULL);
-    if (map == INVALID_HANDLE_VALUE) {
-        log_error("Could not mmap file (%lu)", GetLastError());
-        CloseHandle(file);
-        return NULL;
-    }
-    OBJECT_ALLOC(platform_mmap);
-    platform_mmap->file = file;
-    platform_mmap->map = map;
-    platform_mmap->data = MapViewOfFile(map, FILE_MAP_READ, 0, 0, 0);
-    platform_mmap->size = size.QuadPart;
-    return platform_mmap;
-}
-
-size_t platform_mmap_size(platform_mmap_t* m) {
-    return m->size;
-}
-
-const char* platform_mmap_data(platform_mmap_t* m) {
-    return m->data;
-}
-
-void platform_munmap(platform_mmap_t* m) {
-    UnmapViewOfFile(m->data);
-    CloseHandle(m->map);
-    CloseHandle(m->file);
-    free(m);
-}
 
 int64_t platform_get_time(void) {
     FILETIME t;
@@ -179,30 +137,11 @@ int platform_thread_join(platform_thread_t* thread) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static app_t* app_handle = NULL;
-void platform_init(app_t* app, int argc, char** argv) {
-    app_handle = app;
-    if (argc == 2) {
-        app_open(app, argv[1]);
-    }
-    if (app->instance_count == 0) {
-        //  Construct a dummy window, which triggers GLFW initialization
-        //  and may cause the application to open a file (if it was
-        //  double-clicked or dragged onto the icon).
-        window_new("", 1.0f, 1.0f);
-
-        if (app->instance_count == 0) {
-            app_open(app, ":/sphere");
-        }
-    }
+void platform_init(int argc, char** argv) {
+    // Nothing to do on Windows
 }
 
-#define ID_FILE_OPEN            9001
-#define ID_FILE_EXIT            9002
-#define ID_VIEW_SHADED          9003
-#define ID_VIEW_WIREFRAME       9004
-#define ID_VIEW_ORTHOGRAPHIC    9005
-#define ID_VIEW_PERSPECTIVE     9006
+#define ID_FILE_EXIT            9001
 
 /*  We hot-swap the WNDPROC pointer from the one defined in GLFW to our
  *  own here, which lets us respond to menu events (ignored in GLFW). */
@@ -212,66 +151,10 @@ static LRESULT CALLBACK wndproc(HWND hWnd, UINT message,
 {
     if (message == WM_COMMAND) {
         switch(LOWORD(wParam)) {
-            case ID_FILE_OPEN: {
-                OPENFILENAME ofn;       // common dialog box structure
-                TCHAR szFile[260] = { 0 };       // if using TCHAR macros
-
-                // Initialize OPENFILENAME
-                ZeroMemory(&ofn, sizeof(ofn));
-                ofn.lStructSize = sizeof(ofn);
-                ofn.hwndOwner = hWnd;
-                ofn.lpstrFile = szFile;
-                ofn.nMaxFile = sizeof(szFile);
-                ofn.lpstrFilter = ("STL model\0*.stl\0");
-                ofn.nFilterIndex = 1;
-                ofn.lpstrFileTitle = NULL;
-                ofn.nMaxFileTitle = 0;
-                ofn.lpstrInitialDir = NULL;
-                ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-
-                if (GetOpenFileName(&ofn) == TRUE) {
-                    app_open(app_handle, ofn.lpstrFile);
-                }
-                break;
-            }
             case ID_FILE_EXIT:
                 SendMessage(hWnd, WM_CLOSE, 0, 0);
                 break;
-
-            case ID_VIEW_SHADED:
-                CheckMenuItem(GetSubMenu(GetMenu(hWnd), 1),
-                        ID_VIEW_SHADED, MF_CHECKED);
-                CheckMenuItem(GetSubMenu(GetMenu(hWnd), 1),
-                        ID_VIEW_WIREFRAME, MF_UNCHECKED);
-                instance_view_shaded(app_get_front(app_handle));
-                break;
-
-            case ID_VIEW_WIREFRAME:
-                CheckMenuItem(GetSubMenu(GetMenu(hWnd), 1),
-                        ID_VIEW_SHADED, MF_UNCHECKED);
-                CheckMenuItem(GetSubMenu(GetMenu(hWnd), 1),
-                        ID_VIEW_WIREFRAME, MF_CHECKED);
-                instance_view_wireframe(app_get_front(app_handle));
-                break;
-
-            case ID_VIEW_ORTHOGRAPHIC:
-                CheckMenuItem(GetSubMenu(GetMenu(hWnd), 1),
-                        ID_VIEW_PERSPECTIVE, MF_UNCHECKED);
-                CheckMenuItem(GetSubMenu(GetMenu(hWnd), 1),
-                        ID_VIEW_ORTHOGRAPHIC, MF_CHECKED);
-                instance_view_orthographic(app_get_front(app_handle));
-                break;
-
-            case ID_VIEW_PERSPECTIVE:
-                CheckMenuItem(GetSubMenu(GetMenu(hWnd), 1),
-                        ID_VIEW_ORTHOGRAPHIC, MF_UNCHECKED);
-                CheckMenuItem(GetSubMenu(GetMenu(hWnd), 1),
-                        ID_VIEW_PERSPECTIVE, MF_CHECKED);
-                instance_view_perspective(app_get_front(app_handle));
-                break;
         }
-    } else if (message == WM_CHAR && wParam == 'o' - 'a' + 1) {
-        PostMessage(hWnd, WM_COMMAND, ID_FILE_OPEN, 0L);
     }
     return (*glfw_wndproc)(hWnd, message, wParam, lParam);
 }
@@ -285,32 +168,48 @@ void platform_window_bind(GLFWwindow* window) {
 
     HMENU menu = CreateMenu();
     HMENU file = CreatePopupMenu();
-    AppendMenuW(file, MF_STRING, ID_FILE_OPEN, L"&Open\tCtrl+O");
     AppendMenuW(file, MF_STRING, ID_FILE_EXIT, L"E&xit");
     AppendMenu(menu, MF_STRING | MF_POPUP, (UINT_PTR)file, "File");
-
-    HMENU view = CreatePopupMenu();
-    AppendMenuW(view, MF_STRING, ID_VIEW_SHADED, L"Shaded");
-    CheckMenuItem(view, ID_VIEW_SHADED, MF_CHECKED);
-    AppendMenuW(view, MF_STRING, ID_VIEW_WIREFRAME, L"Wireframe");
-
-    AppendMenuW(view, MF_SEPARATOR, 0, NULL);
-
-    AppendMenuW(view, MF_STRING, ID_VIEW_ORTHOGRAPHIC, L"Orthographic");
-    CheckMenuItem(view, ID_VIEW_ORTHOGRAPHIC, MF_CHECKED);
-    AppendMenuW(view, MF_STRING, ID_VIEW_PERSPECTIVE, L"Perspective");
-
-    AppendMenu(menu, MF_STRING | MF_POPUP, (UINT_PTR)view, "View");
 
     SetMenu(w, menu);
 }
 
-/*  Shows a warning dialog with the given text */
-void platform_warning(const char* title, const char* text) {
-    log_error(text);
-}
-
 /*  Returns the filename portion of a full path */
 const char* platform_filename(const char* filepath) {
-    return filepath;
+    return PathFindFileNameA(filepath);
+}
+
+const char* platform_get_user_file(const char* file) {
+    PWSTR out = NULL;
+    SHGetKnownFolderPath(
+        &FOLDERID_RoamingAppData,
+        KF_FLAG_CREATE,
+        NULL,
+        &out);
+
+    PWSTR ptr = out;
+    while (*ptr) {
+        ++ptr;
+    }
+    const char* folder = "StatesMachine";
+    char* s = malloc((ptr - out) + 1 + strlen(folder) + 1 + strlen(file) + 1);
+    char* v = s;
+    ptr = out;
+    while (*ptr) {
+        *v++ = *ptr++;
+    }
+    *v++ = '\\';
+    while (*folder) {
+        *v++ = *folder++;
+    }
+    *v = 0;
+    CreateDirectoryA(s, NULL);
+
+    // Append filename
+    *v++ = '\\';
+    while (*file) {
+        *v++ = *file++;
+    }
+    *v = 0;
+    return s;
 }

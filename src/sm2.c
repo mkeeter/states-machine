@@ -49,6 +49,9 @@ sm2_t* sm2_new() {
     OBJECT_ALLOC(sm2);
 
     const char* p = platform_get_user_file("sm.sqlite");
+    if (p == NULL) {
+        log_error_and_abort("Could not open sm.sqlite");
+    }
     SQLITE_CHECKED(sqlite3_open(p, &sm2->db));
 
     char* err_msg;

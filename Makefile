@@ -97,7 +97,7 @@ ifeq ($(TARGET), win32-cross)
 	SRC += platform/win32
 	CFLAGS += -mwindows -DGLEW_STATIC
 	PLATFORM := -DPLATFORM_WIN32
-	LDFLAGS += -lopengl32
+	LDFLAGS += -lopengl32 -lShlwapi
 	TARGET_APP  := StatesMachine.exe
 else
 	TARGET_APP  := states-machine
@@ -115,9 +115,9 @@ DEP := $(OBJ:.o=.d)
 BUILD_SUBDIRS := $(sort $(dir $(OBJ)))
 
 ifeq ($(TARGET), win32-cross)
-$(BUILD_DIR)/erizo.coff: deploy/win32/erizo.rc
+$(BUILD_DIR)/StatesMachine.coff: deploy/win32/StatesMachine.rc
 	x86_64-w64-mingw32-windres $? $@
-OBJ += $(BUILD_DIR)/erizo.coff
+OBJ += $(BUILD_DIR)/StatesMachine.coff
 endif
 
 $(TARGET_APP): $(OBJ)
