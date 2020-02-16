@@ -101,12 +101,13 @@ sm2_t* sm2_new() {
     sm2_prepare_statement(sm2, &sm2->incorrect,
         "UPDATE sm2 SET reps = 1 WHERE type = ?1 AND item = ?2");
     sm2_prepare_statement(sm2, &sm2->correct,
-        "UPDATE sm2 SET reps = reps + 1, ef = ?3 WHERE type = ?1 AND item = ?2");
+        "UPDATE sm2 SET ef = ?3 WHERE type = ?1 AND item = ?2");
     sm2_prepare_statement(sm2, &sm2->retrain,
         "UPDATE sm2 SET next = NULL WHERE type = ?1 AND item = ?2");
     sm2_prepare_statement(sm2, &sm2->reschedule,
         "UPDATE sm2"
-        "    SET next = strftime('%s', 'now') + ?3 * 86400.0 - 86400.0/2"
+        "    SET reps = reps + 1, "
+        "        next = strftime('%s', 'now') + ?3 * 86400.0 - 86400.0/2"
         "    WHERE type = ?1 AND item = ?2");
 
     return sm2;
