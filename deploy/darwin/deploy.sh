@@ -1,7 +1,7 @@
 #!/bin/sh
 set -x -e
 
-EXE="StatesMachine"
+EXE="States Machine"
 APP="States Machine.app"
 
 cd ../..
@@ -23,17 +23,17 @@ mkdir -p "$APP/Contents/MacOS"
 mkdir -p "$APP/Contents/Resources"
 mkdir -p "$APP/Contents/Frameworks"
 
-STATES_MACHINE=$APP/Contents/MacOS/$EXE
+STATES_MACHINE="$APP/Contents/MacOS/$EXE"
 cp states-machine "$STATES_MACHINE"
 cp "deploy/darwin/$EXE.icns" "$APP/Contents/Resources"
 sed "s/VERSION/$VERSION/g" deploy/darwin/Info.plist > "$APP/Contents/Info.plist"
 
 if [ "$1" == "dmg" ]
 then
-    rm -rf dmg $EXE.dmg
+    rm -rf dmg "$EXE.dmg"
     mkdir dmg
-    cp -r $APP dmg
-    hdiutil create $EXE.dmg -volname "$EXE $VERSION" -srcfolder dmg
+    cp -r "$APP" dmg
+    hdiutil create "$EXE.dmg" -volname "$EXE $VERSION" -srcfolder dmg
 
     # Clean up
     rm -rf dmg

@@ -7,13 +7,13 @@
     <key>NSHighResolutionCapable</key>
     <string>True</string>
     <key>CFBundleIconFile</key>
-    <string>StatesMachine.icns</string>
+    <string>States Machine.icns</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleGetInfoString</key>
     <string>Learn US states with spaced repetition</string>
     <key>CFBundleExecutable</key>
-    <string>StatesMachine</string>
+    <string>States Machine</string>
     <key>CFBundleIdentifier</key>
     <string>com.impraxical.StatesMachine</string>
     <key>CFBundleVersion</key>

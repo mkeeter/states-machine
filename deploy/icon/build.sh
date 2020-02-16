@@ -9,7 +9,7 @@ convert icon512.png -resize 32x32 icon032.png
 convert icon512.png -resize 16x16 icon016.png
 
 # Build the Mac icon
-png2icns ../darwin/StatesMachine.icns icon*.png
+png2icns ../darwin/States\ Machine.icns icon*.png
 
 # Build the Windows icon
 convert icon*.png ../win32/StatesMachine.ico
