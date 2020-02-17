@@ -21,7 +21,7 @@ using [spaced repetition](https://en.wikipedia.org/wiki/Spaced_repetition).
 
 # Platforms
 Setting expectations up front,
-**States Machine** is mostly for me,
+**States Machine** is mostly [for me](https://www.robinsloan.com/notes/home-cooked-app/),
 so I won't be making any major effort to make it
 run on machines other than my own.
 

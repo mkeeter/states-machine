@@ -96,6 +96,8 @@ void instance_next(instance_t* instance) {
         }
     } else if (instance->active->mode == ITEM_MODE_POSITION) {
         instance_update_active_state(instance);
+    } else if (instance->active->mode == ITEM_MODE_DONE) {
+        instance->active_state = 0;
     }
 }
 
