@@ -66,3 +66,7 @@ GLFW is shipped in the repository, to easily build a static binary.  It only nee
 [`cd deploy/darwin && deploy.sh`](https://github.com/mkeeter/states-machine/blob/master/deploy/darwin/deploy.sh)
 
 Note that this does not sign / notarize / apostille the application bundle.
+
+# License
+© 2019-2020 Matthew Keeter  
+**States Machine** is released under the [MPL 2.0 license](https://www.mozilla.org/en-US/MPL/2.0/)
