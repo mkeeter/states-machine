@@ -14,7 +14,7 @@ void main() {
 static const GLchar* COMPOSITOR_FS_SRC = GLSL(330,
 out vec4 out_color;
 
-uniform sampler2D tex;
+uniform isampler2D tex;
 uniform int active_state;
 uniform int wrong_state;
 
@@ -28,7 +28,7 @@ bool is_edge(float state, int ix, int iy) {
     for (int x = ix - 1; x <= ix; ++x) {
         for (int y = iy - 1; y <= iy; ++y) {
             if (x != ix || y != iy) {
-                float u = texelFetch(tex, ivec2(x, y), 0).r;
+                int u = texelFetch(tex, ivec2(x, y), 0).r;
                 if (u != state) {
                     return true;
                 }
@@ -41,7 +41,7 @@ bool is_edge(float state, int ix, int iy) {
 void main() {
     int ix = int(gl_FragCoord.x + 0.5f);
     int iy = int(gl_FragCoord.y + 0.5f);
-    float t = texelFetch(tex, ivec2(ix, iy), 0).r;
+    int t = texelFetch(tex, ivec2(ix, iy), 0).r;
 
     bool e = is_edge(t, ix, iy);
     if (e) {
@@ -89,8 +89,8 @@ void compositor_resize(compositor_t* compositor,
     glBindFramebuffer(GL_FRAMEBUFFER, compositor->fbo);
 
     glBindTexture(GL_TEXTURE_2D, compositor->tex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0,
-                 GL_RED, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, width, height, 0,
+                 GL_RED_INTEGER, GL_INT, NULL);
     log_gl_error();
 }
 
@@ -104,14 +104,14 @@ compositor_t* compositor_new(uint32_t width, uint32_t height) {
 
     compositor_resize(compositor, width, height);
 
-    /* Bind the color output buffers, which is a texture */
+    /* Bind the color output buffer, which is a texture */
     glBindTexture(GL_TEXTURE_2D, compositor->tex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                            GL_TEXTURE_2D, compositor->tex, 0);
 
-    /* Configure the framebuffer to draw to two color buffers */
+    /* Configure the framebuffer to draw to one color buffer */
     GLuint attachments[1] = {GL_COLOR_ATTACHMENT0};
     glDrawBuffers(1, attachments);
 
@@ -198,7 +198,7 @@ void compositor_draw(compositor_t* compositor, int active_state,
 
 int compositor_state_at(compositor_t* compositor, int x, int y) {
     glBindFramebuffer(GL_FRAMEBUFFER, compositor->fbo);
-    float out;
-    glReadPixels(x, y, 1, 1, GL_RED, GL_FLOAT, &out);
-    return (int)out;
+    int out;
+    glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &out);
+    return out;
 }

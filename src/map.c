@@ -24,10 +24,10 @@ void main() {
 
 static const GLchar* MAP_FS_SRC = GLSL(330,
 in float state_color;
-layout(location=0) out float out_color;
+layout(location=0) out int out_color;
 
 void main() {
-    out_color = state_color;
+    out_color = int(state_color);
 }
 );
 
