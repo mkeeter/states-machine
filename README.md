@@ -85,3 +85,4 @@ Note that this does not sign / notarize / apostille the application bundle.
 - SQLite: [Public domain](https://www.sqlite.org/copyright.html)
 - `stb_truetype` and `stb_rectpack`: [MIT / public domain](https://github.com/mkeeter/states-machine/blob/master/vendor/stb/stb_truetype.h#L4975-L5009)
 - Inconsolata font: [Open Font License](http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL_web)
+- Shapefiles from US Census: [Public domain, presumably](https://en.wikipedia.org/wiki/Copyright_status_of_works_by_the_federal_government_of_the_United_States)
