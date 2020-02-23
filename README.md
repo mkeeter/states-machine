@@ -83,5 +83,5 @@ Note that this does not sign / notarize / apostille the application bundle.
 - GLEW: [Modified BSD license](https://github.com/mkeeter/states-machine/blob/master/vendor/glew/LICENSE.txt)
 - GLFW: [zlib/libpng license](https://github.com/mkeeter/states-machine/blob/master/vendor/glfw/LICENSE.md)
 - SQLite: [Public domain](https://www.sqlite.org/copyright.html)
-- `stb_truetype.h`: [MIT / public domain](https://github.com/mkeeter/states-machine/blob/master/vendor/stb/stb_truetype.h#L4975-L5009)
+- `stb_truetype` and `stb_rectpack`: [MIT / public domain](https://github.com/mkeeter/states-machine/blob/master/vendor/stb/stb_truetype.h#L4975-L5009)
 - Inconsolata font: [Open Font License](http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL_web)
