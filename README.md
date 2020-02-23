@@ -32,8 +32,8 @@ but you'll have to do most of the legwork.
 
 | OS           | Compiler                 | Maintainer                             | Notes                            |
 | -            | -                        | -                                      | -                                |
-| MacOS        | `llvm`                   | [@mkeeter](https://github.com/mkeeter) | Main development platform        |
-| Windows      | `x86_64-w64-mingw32-gcc` | Not officially supported               | Compiles, but doesn't quite work |
+| macOS        | `llvm`                   | [@mkeeter](https://github.com/mkeeter) | Main development platform        |
+| Windows      | `x86_64-w64-mingw32-gcc` | Not officially supported               | Compiles, runs with graphical glitches |
 | Your OS here | `???`                    | Your username here                     | Contributors welcome!            |
 
 Other platforms will be supported if implemented and maintained by other contributors.
@@ -46,9 +46,8 @@ To become a platform maintainer, open a PR which:
 # Compiling
 At the moment, **States Machine** supports compiling a native application on my laptop (MacOS 10.13).
 
-It can cross-compile to Windows (if `TARGET=win32-cross` is set),
-but the graphics don't completely work in Wine;
-it's unknown whether it would work on a native Windows installation.
+It can also cross-compile to Windows (if `TARGET=win32-cross` is set),
+with slight graphical glitches during window resizing.
 
 ## Building dependencies
 GLFW is shipped in the repository, to easily build a static binary.  It only needs to be compiled once.
@@ -65,10 +64,12 @@ GLFW is shipped in the repository, to easily build a static binary.  It only nee
 ```
 [env TARGET=win32-cross] make deploy
 ```
-which executes [`deploy/darwin/deploy.sh`](https://github.com/mkeeter/states-machine/blob/master/deploy/darwin/deploy.sh),
+which executes [`deploy/darwin/deploy.sh`](https://github.com/mkeeter/states-machine/blob/master/deploy/darwin/deploy.sh)
 (Mac) or
-[`deploy/win32/deploy.sh`](https://github.com/mkeeter/states-machine/blob/master/deploy/win32/deploy.sh))
-producing the disk image `States Machine.dmg` (Mac)
+[`deploy/win32/deploy.sh`](https://github.com/mkeeter/states-machine/blob/master/deploy/win32/deploy.sh) (cross-compiling to Windows).
+
+This command
+produces the disk image `States Machine.dmg` (macOS)
 or the zip archive `States Machine.zip` (Windows).
 
 Note that this does not sign / notarize / apostille the application bundle.
