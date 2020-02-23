@@ -1,4 +1,7 @@
 # States Machine
+[Homepage](https://mattkeeter.com/projects/states) |
+[Repository](https://github.com/mkeeter/states-machine)
+
 **States Machine** is an app to memorize the names and locations of the fifty US states
 using [spaced repetition](https://en.wikipedia.org/wiki/Spaced_repetition).
 
