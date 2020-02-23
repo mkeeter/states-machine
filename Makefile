@@ -139,11 +139,18 @@ endif
 $(BUILD_SUBDIRS):
 	mkdir -p $(sort $(dir $(OBJ)))
 
-.PHONY: clean
+.PHONY: clean deploy
 clean:
 	rm -rf $(BUILD_DIR)
 	rm -rf $(GEN)
 	rm -f $(TARGET_APP)
+
+deploy:
+ifeq ($(TARGET), win32-cross)
+	cd deploy/win32 && ./deploy.sh zip
+else
+	cd deploy/darwin && ./deploy.sh dmg
+endif
 
 ################################################################################
 # Building vendored GLFW

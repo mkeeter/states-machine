@@ -33,10 +33,12 @@ then
     rm -rf dmg "$EXE.dmg"
     mkdir dmg
     cp -r "$APP" dmg
+    cp README.md dmg/README.txt
     hdiutil create "$EXE.dmg" -volname "$EXE $VERSION" -srcfolder dmg
 
     # Clean up
-    rm -rf dmg
+    rm -r dmg
+    rm -r "$APP"
 fi
 
 make clean
