@@ -169,7 +169,7 @@ void platform_window_bind(GLFWwindow* window) {
     HMENU menu = CreateMenu();
     HMENU file = CreatePopupMenu();
     AppendMenuW(file, MF_STRING, ID_FILE_EXIT, L"E&xit");
-    AppendMenu(menu, MF_STRING | MF_POPUP, (UINT_PTR)file, "File");
+    AppendMenu(menu, MF_STRING | MF_POPUP, (UINT_PTR)file, "&File");
 
     SetMenu(w, menu);
 }

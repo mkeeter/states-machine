@@ -308,3 +308,11 @@ bool camera_check_anim(camera_t* camera) {
 float camera_aspect_ratio(camera_t* camera) {
     return camera->width / (float)camera->height;
 }
+
+void camera_check_viewport(camera_t* camera) {
+    int v[4];
+    glGetIntegerv(GL_VIEWPORT, v);
+    if (v[0] || v[1] || v[2] != camera->width || v[3] != camera->height) {
+        glViewport(0, 0, camera->width, camera->height);
+    }
+}

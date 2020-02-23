@@ -113,12 +113,6 @@ void instance_cb_window_size(instance_t* instance, int width, int height)
      *  (otherwise it ends up greyed out on Mac)  */
     instance_draw(instance);
 #endif
-
-#ifdef PLATFORM_WIN32
-    /*  Otherwise, it misbehaves in a high-DPI environment */
-    glfwMakeContextCurrent(instance->window);
-    glViewport(0, 0, width, height);
-#endif
 }
 
 void instance_cb_framebuffer_size(instance_t* instance, int width, int height)
@@ -248,6 +242,13 @@ bool instance_draw(instance_t* instance) {
     const bool needs_redraw = camera_check_anim(instance->camera);
 
     glfwMakeContextCurrent(instance->window);
+
+#ifdef PLATFORM_WIN32
+    /*  This works around an issue in the Windows build where it ends
+     *  up with a half-size viewport.  Not sure whether this is my code,
+     *  GLFW, or running in Wine, but this check fixes it. */
+    camera_check_viewport(instance->camera);
+#endif
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClearDepth(1.0f);

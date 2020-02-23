@@ -54,3 +54,7 @@ void camera_bind(camera_t* camera, camera_uniforms_t u);
 
 /*  Translates from window to framebuffer pixel locations */
 void camera_get_fb_pixel(camera_t* camera, int x, int y, int* fx, int* fy);
+
+/*  If the OpenGL viewport doesn't match the camera,
+ *  calls glViewport with the camera's width and height */
+void camera_check_viewport(camera_t* camera);
