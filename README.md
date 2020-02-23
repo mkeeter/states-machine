@@ -62,8 +62,14 @@ GLFW is shipped in the repository, to easily build a static binary.  It only nee
 ```
 
 ## Deploying an application bundle
-### MacOS
-[`cd deploy/darwin && deploy.sh`](https://github.com/mkeeter/states-machine/blob/master/deploy/darwin/deploy.sh)
+```
+[env TARGET=win32-cross] make deploy
+```
+which executes [`deploy/darwin/deploy.sh`](https://github.com/mkeeter/states-machine/blob/master/deploy/darwin/deploy.sh),
+(Mac) or
+[`deploy/win32/deploy.sh`](https://github.com/mkeeter/states-machine/blob/master/deploy/win32/deploy.sh))
+producing the disk image `States Machine.dmg` (Mac)
+or the zip archive `States Machine.zip` (Windows).
 
 Note that this does not sign / notarize / apostille the application bundle.
 
