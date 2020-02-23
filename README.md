@@ -30,11 +30,11 @@ Arch Linux or OpenBSD,
 you're entirely welcome,
 but you'll have to do most of the legwork.
 
-| OS           | Compiler                 | Maintainer                             | Notes                            |
-| -            | -                        | -                                      | -                                |
-| macOS        | `llvm`                   | [@mkeeter](https://github.com/mkeeter) | Main development platform        |
-| Windows      | `x86_64-w64-mingw32-gcc` | Not officially supported               | Compiles, runs with graphical glitches |
-| Your OS here | `???`                    | Your username here                     | Contributors welcome!            |
+| OS           | Compiler                 | Maintainer                             | Notes                     |
+| -            | -                        | -                                      | -                         |
+| macOS        | `llvm`                   | [@mkeeter](https://github.com/mkeeter) | Main development platform |
+| Windows      | `x86_64-w64-mingw32-gcc` | Not officially supported               | Only tested in Wine       |
+| Your OS here | `???`                    | Your username here                     | Contributors welcome!     |
 
 Other platforms will be supported if implemented and maintained by other contributors.
 
@@ -43,11 +43,18 @@ To become a platform maintainer, open a PR which:
 - Add details to the table above
 - Updates the **Compiling** instructions below.
 
-# Compiling
-At the moment, **States Machine** supports compiling a native application on my laptop (MacOS 10.13).
+# Releases
+Binary builds are [available on Github](https://github.com/mkeeter/states-machine/releases)
+for macOS and Windows.
 
-It can also cross-compile to Windows (if `TARGET=win32-cross` is set),
-with slight graphical glitches during window resizing.
+The macOS application is not signed or notarized,
+so you may need to right-click → Open instead of double-clicking.
+
+# Compiling
+At the moment, **States Machine** supports two targets:
+
+- Compiling a native application on macOS
+- Cross-compiling from macOS to Windows (if `TARGET=win32-cross` is set)
 
 ## Building dependencies
 GLFW is shipped in the repository, to easily build a static binary.  It only needs to be compiled once.
